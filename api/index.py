@@ -1,6 +1,7 @@
 import json
 import uuid
 import hashlib
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
@@ -10,7 +11,17 @@ from typing import List, Optional
 from api.database import get_db, engine, Base
 from api.models import ChemicalCompound, ConsumerProduct, ProductIngredient, Article, PodcastTrack, TimedAnnotation, CitizenMetric
 
-app = FastAPI(title="Everyday Chemistry API", version="1.0.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Create all tables on cold-start (safe to call multiple times)
+    Base.metadata.create_all(bind=engine)
+    # Seed minimal demo data if the DB is empty
+    _seed_if_empty()
+    yield
+
+
+app = FastAPI(title="Everyday Chemistry API", version="1.0.0", lifespan=lifespan)
 
 # CORS middleware configuration
 app.add_middleware(
@@ -450,3 +461,94 @@ def get_article(slug: str, db: Session = Depends(get_db)):
             } for c in compounds
         ]
     }
+
+
+# ---------------------------------------------------------------------------
+# Bootstrap helper – seeds a handful of rows so the UI isn't blank on Vercel
+# ---------------------------------------------------------------------------
+def _seed_if_empty():
+    from sqlalchemy.orm import Session as S
+    db = next(get_db())
+    try:
+        if db.query(ChemicalCompound).count() > 0:
+            return  # already seeded
+
+        compounds = [
+            ChemicalCompound(
+                compound_uuid=str(uuid.uuid4()),
+                iupac_name="sodium chloride",
+                common_name="Table Salt",
+                molecular_formula="NaCl",
+                safety_tier_rating="Green",
+                description="Common table salt, an ionic compound of sodium and chlorine.",
+                function_txt="Flavoring, preservative, electrolyte",
+                mechanism_of_action_txt="Osmotic balance regulation; essential electrolyte",
+                misconceptions_txt="Salt alone does not cause hypertension in everyone",
+                alternatives_txt="Potassium chloride (KCl) as low-sodium substitute",
+                source_urls='["https://pubchem.ncbi.nlm.nih.gov/compound/5234"]',
+            ),
+            ChemicalCompound(
+                compound_uuid=str(uuid.uuid4()),
+                iupac_name="acetic acid",
+                common_name="Vinegar (Acetic Acid)",
+                molecular_formula="CH3COOH",
+                safety_tier_rating="Green",
+                description="The main component of vinegar, a weak organic acid.",
+                function_txt="Preservative, cleaning agent, flavor enhancer",
+                mechanism_of_action_txt="Weak acid that lowers pH; antimicrobial at concentrations >5%",
+                misconceptions_txt="Vinegar is NOT a disinfectant for pathogens like Salmonella",
+                alternatives_txt="Citric acid for similar acidic cleaning applications",
+                source_urls='["https://pubchem.ncbi.nlm.nih.gov/compound/176"]',
+            ),
+            ChemicalCompound(
+                compound_uuid=str(uuid.uuid4()),
+                iupac_name="sodium lauryl sulfate",
+                common_name="SLS (Sodium Lauryl Sulfate)",
+                molecular_formula="C12H25NaO4S",
+                safety_tier_rating="Yellow",
+                description="A surfactant and detergent found in many personal care products.",
+                function_txt="Surfactant, foaming agent",
+                mechanism_of_action_txt="Disrupts lipid bilayers; reduces surface tension",
+                misconceptions_txt="SLS is not a carcinogen despite online claims",
+                alternatives_txt="Sodium laureth sulfate (SLES), coco-glucoside",
+                source_urls='["https://pubchem.ncbi.nlm.nih.gov/compound/3423265"]',
+            ),
+        ]
+        db.add_all(compounds)
+
+        articles = [
+            Article(
+                slug="what-is-in-your-tap-water",
+                title="What's Really In Your Tap Water?",
+                category="Water Quality",
+                reading_level="Beginner",
+                content="Tap water contains minerals, disinfectants like chlorine, and trace elements. Most municipal water is safe to drink and rigorously tested.",
+                last_reviewed_at="2024-01-01",
+                source_log_json='{"sources": ["EPA", "WHO"]}',
+                compound_ids='[]',
+            ),
+            Article(
+                slug="chemistry-of-cleaning-products",
+                title="The Chemistry Behind Everyday Cleaning Products",
+                category="Household Chemistry",
+                reading_level="Intermediate",
+                content="Cleaning products rely on surfactants, oxidizers, and acids/bases to break down grime. Understanding them helps you use them safely.",
+                last_reviewed_at="2024-03-15",
+                source_log_json='{"sources": ["ACS", "NIH"]}',
+                compound_ids='[]',
+            ),
+        ]
+        db.add_all(articles)
+        db.commit()
+    except Exception:
+        db.rollback()
+    finally:
+        db.close()
+
+
+# Vercel / AWS Lambda ASGI bridge
+try:
+    from mangum import Mangum
+    handler = Mangum(app, lifespan="off")
+except ImportError:
+    pass  # mangum optional; Vercel also supports ASGI apps natively

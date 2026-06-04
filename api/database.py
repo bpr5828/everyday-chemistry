@@ -2,8 +2,10 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-# Fallback to local SQLite file everyday_chemistry.db in /tmp or workspace
-DATABASE_URL = os.environ.get("DATABASE_URL", "sqlite:///./everyday_chemistry.db")
+# On Vercel, the filesystem is read-only except /tmp.
+# Use DATABASE_URL env var for production (Postgres), fall back to /tmp SQLite for dev/demo.
+_default_sqlite = "sqlite:////tmp/everyday_chemistry.db"
+DATABASE_URL = os.environ.get("DATABASE_URL", _default_sqlite)
 
 # Address Vercel/Heroku legacy postgres:// URL format
 if DATABASE_URL.startswith("postgres://"):
