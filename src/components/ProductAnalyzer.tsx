@@ -55,7 +55,7 @@ export default function ProductAnalyzer({ onSearchCompound }: ProductAnalyzerPro
   ];
 
   const handleParse = async (textToParse = ingredientsText) => {
-    if (!textToParse.strip()) return;
+    if (!textToParse.trim()) return;
     setLoading(true);
     setError(null);
     try {
@@ -183,7 +183,7 @@ export default function ProductAnalyzer({ onSearchCompound }: ProductAnalyzerPro
           <div className="flex gap-3 pt-2">
             <button
               onClick={() => handleParse()}
-              disabled={loading || !ingredientsText.strip()}
+              disabled={loading || !ingredientsText.trim()}
               className="flex-1 bg-green-500 hover:bg-green-600 active:scale-[0.98] disabled:opacity-40 disabled:pointer-events-none text-[#070a13] font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-xs transition-all duration-150"
             >
               {loading ? (
