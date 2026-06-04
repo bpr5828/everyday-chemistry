@@ -8,8 +8,8 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
-from api.database import get_db, engine, Base
-from api.models import ChemicalCompound, ConsumerProduct, ProductIngredient, Article, PodcastTrack, TimedAnnotation, CitizenMetric
+from .database import get_db, engine, Base
+from .models import ChemicalCompound, ConsumerProduct, ProductIngredient, Article, PodcastTrack, TimedAnnotation, CitizenMetric
 
 
 @asynccontextmanager
