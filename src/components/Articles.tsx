@@ -132,8 +132,8 @@ export default function Articles({ onSearchCompound }: ArticlesProps) {
     <div className="space-y-6">
       {/* Title */}
       <div className="space-y-1">
-        <h2 className="text-3xl font-black font-display text-white m-0">Food & Daily Chemistry Articles</h2>
-        <p className="text-sm text-gray-400">
+        <h2 className="text-3xl font-black font-display text-slate-800 m-0">Food & Daily Chemistry Articles</h2>
+        <p className="text-sm text-slate-500">
           Peer-reviewed articles translating complex kitchen reactions, biochemical metabolisms, and household safety parameters.
         </p>
       </div>
@@ -141,8 +141,8 @@ export default function Articles({ onSearchCompound }: ArticlesProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
         
         {/* List side */}
-        <div className="bg-[#0b0f19] border border-gray-800 rounded-3xl p-6 space-y-4">
-          <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest block pb-2 border-b border-gray-800">
+        <div className="bg-white border border-slate-200 rounded-3xl p-6 space-y-4 shadow-sm">
+          <h3 className="text-xs font-bold text-slate-450 uppercase tracking-widest block pb-2 border-b border-slate-200">
             Available Articles
           </h3>
           <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
@@ -154,17 +154,17 @@ export default function Articles({ onSearchCompound }: ArticlesProps) {
                   onClick={() => fetchArticleDetail(art.slug)}
                   className={`w-full text-left p-4 rounded-2xl border transition-all ${
                     isSelected
-                      ? 'bg-green-500/10 border-green-500/30 text-white font-medium'
-                      : 'bg-gray-900/30 border-gray-800 hover:border-gray-700 text-gray-400'
+                      ? 'bg-green-55 border-green-200 text-green-950 font-semibold shadow-xs'
+                      : 'bg-slate-50 border border-slate-200 hover:border-slate-350/60 hover:bg-slate-100/50 text-slate-700'
                   }`}
                 >
-                  <span className="text-[10px] text-green-400 font-extrabold uppercase tracking-widest block mb-1">
+                  <span className="text-[10px] text-green-700 font-extrabold uppercase tracking-widest block mb-1">
                     {art.category}
                   </span>
-                  <h4 className="text-sm font-bold font-display text-white leading-snug line-clamp-2 m-0">
+                  <h4 className="text-sm font-bold font-display text-slate-800 leading-snug line-clamp-2 m-0">
                     {art.title}
                   </h4>
-                  <div className="flex items-center gap-3 mt-3 text-[10px] text-gray-500 font-medium">
+                  <div className="flex items-center gap-3 mt-3 text-[10px] text-slate-400 font-medium">
                     <span className="flex items-center gap-1">
                       <BookOpen className="w-3.5 h-3.5" />
                       {art.reading_level}
@@ -180,43 +180,43 @@ export default function Articles({ onSearchCompound }: ArticlesProps) {
         <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
           
           {/* Article Contents */}
-          <div className="md:col-span-2 bg-[#0b0f19] border border-gray-800 rounded-3xl p-8 space-y-6 min-h-[400px]">
+          <div className="md:col-span-2 bg-white border border-slate-200 rounded-3xl p-8 space-y-6 min-h-[400px] shadow-sm">
             {selectedArticle ? (
               <article className="space-y-6">
                 
                 {/* Header */}
-                <div className="space-y-3 pb-5 border-b border-gray-850">
-                  <span className="text-xs text-green-400 font-extrabold uppercase tracking-widest">
+                <div className="space-y-3 pb-5 border-b border-slate-200">
+                  <span className="text-xs text-green-700 font-extrabold uppercase tracking-widest">
                     {selectedArticle.category}
                   </span>
-                  <h1 className="text-3xl font-black font-display text-white tracking-tight m-0 leading-tight">
+                  <h1 className="text-3xl font-black font-display text-slate-800 tracking-tight m-0 leading-tight">
                     {selectedArticle.title}
                   </h1>
-                  <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 font-semibold pt-1">
+                  <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400 font-semibold pt-1">
                     <span className="flex items-center gap-1">
-                      <Calendar className="w-4 h-4 text-gray-650" />
+                      <Calendar className="w-4 h-4 text-slate-400" />
                       Reviewed: {selectedArticle.last_reviewed_at}
                     </span>
                     <span className="flex items-center gap-1">
-                      <BookOpen className="w-4 h-4 text-gray-650" />
+                      <BookOpen className="w-4 h-4 text-slate-400" />
                       Reading Level: {selectedArticle.reading_level}
                     </span>
                   </div>
                 </div>
 
                 {/* Markdown body content */}
-                <div className="text-sm text-gray-300 leading-relaxed space-y-4 font-normal">
+                <div className="text-sm text-slate-650 leading-relaxed space-y-4 font-normal">
                   {selectedArticle.content.split('\n\n').map((paragraph, index) => {
                     if (paragraph.startsWith('### ')) {
                       return (
-                        <h3 key={index} className="text-lg font-bold font-display text-white mt-6 mb-2">
+                        <h3 key={index} className="text-lg font-bold font-display text-slate-800 mt-6 mb-2">
                           {paragraph.replace('### ', '')}
                         </h3>
                       );
                     }
                     if (paragraph.startsWith('- ')) {
                       return (
-                        <ul key={index} className="list-disc pl-5 space-y-1.5 my-3 text-xs text-gray-300">
+                        <ul key={index} className="list-disc pl-5 space-y-1.5 my-3 text-xs text-slate-600">
                           {paragraph.split('\n').map((li, idx) => (
                             <li key={idx} className="leading-relaxed">
                               {li.replace('- ', '')}
@@ -234,7 +234,7 @@ export default function Articles({ onSearchCompound }: ArticlesProps) {
                 </div>
               </article>
             ) : (
-              <div className="h-full flex items-center justify-center text-center text-gray-500 py-20 animate-pulse">
+              <div className="h-full flex items-center justify-center text-center text-slate-400 py-20 animate-pulse">
                 Loading article contents...
               </div>
             )}
@@ -245,8 +245,8 @@ export default function Articles({ onSearchCompound }: ArticlesProps) {
             {selectedArticle && (
               <>
                 {/* Linked Chemicals */}
-                <div className="bg-[#0b0f19] border border-gray-800 rounded-3xl p-5 space-y-4">
-                  <h4 className="text-xs font-bold text-gray-450 uppercase tracking-widest block border-b border-gray-850 pb-2">
+                <div className="bg-white border border-slate-200 rounded-3xl p-5 space-y-4 shadow-sm">
+                  <h4 className="text-xs font-bold text-slate-450 uppercase tracking-widest block border-b border-slate-200 pb-2">
                     Linked Chemicals
                   </h4>
                   <div className="flex flex-col gap-2">
@@ -254,47 +254,47 @@ export default function Articles({ onSearchCompound }: ArticlesProps) {
                       <button
                         key={comp.compound_uuid}
                         onClick={() => onSearchCompound(comp.compound_uuid)}
-                        className="w-full text-left p-3.5 bg-gray-900 border border-gray-850 hover:border-gray-800 rounded-2xl flex items-center justify-between text-xs transition-all group"
+                        className="w-full text-left p-3.5 bg-slate-50 border border-slate-200 hover:border-slate-350 hover:bg-slate-100 rounded-2xl flex items-center justify-between text-xs transition-all group shadow-xs"
                       >
                         <div className="min-w-0">
                           <div className="flex items-center gap-1.5">
-                            <span className="font-bold text-white group-hover:text-green-400">{comp.common_name}</span>
-                            <span className="text-[10px] font-mono text-purple-400">{comp.molecular_formula}</span>
+                            <span className="font-bold text-slate-800 group-hover:text-green-700">{comp.common_name}</span>
+                            <span className="text-[10px] font-mono text-purple-700">{comp.molecular_formula}</span>
                           </div>
-                          <span className="text-[10px] text-gray-500 block mt-0.5 truncate">{comp.function_txt}</span>
+                          <span className="text-[10px] text-slate-450 block mt-0.5 truncate">{comp.function_txt}</span>
                         </div>
-                        <ArrowRight className="w-3.5 h-3.5 text-gray-500 group-hover:text-white" />
+                        <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-900" />
                       </button>
                     ))}
                   </div>
                 </div>
 
                 {/* Source Review Log */}
-                <div className="bg-[#0b0f19] border border-gray-800 rounded-3xl p-5 space-y-4">
-                  <h4 className="text-xs font-bold text-gray-450 uppercase tracking-widest block border-b border-gray-850 pb-2">
+                <div className="bg-white border border-slate-200 rounded-3xl p-5 space-y-4 shadow-sm">
+                  <h4 className="text-xs font-bold text-slate-450 uppercase tracking-widest block border-b border-slate-200 pb-2">
                     Research Integrity Log
                   </h4>
                   <div className="space-y-3.5">
                     <div className="space-y-1">
-                      <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Draft Author</span>
-                      <p className="text-xs font-semibold text-gray-350">{selectedArticle.source_log.author}</p>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Draft Author</span>
+                      <p className="text-xs font-semibold text-slate-700">{selectedArticle.source_log.author}</p>
                     </div>
 
                     <div className="space-y-1">
-                      <div className="flex items-center gap-1.5 text-green-400">
+                      <div className="flex items-center gap-1.5 text-green-705">
                         <ShieldCheck className="w-4 h-4" />
                         <span className="text-[10px] font-bold uppercase tracking-wider block">Verified Reviewer</span>
                       </div>
-                      <p className="text-xs font-semibold text-gray-350">{selectedArticle.source_log.reviewer}</p>
+                      <p className="text-xs font-semibold text-slate-700">{selectedArticle.source_log.reviewer}</p>
                     </div>
 
                     <div className="space-y-2">
-                      <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider block">Scientific Citations</span>
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Scientific Citations</span>
                       <div className="flex flex-col gap-1.5">
                         {selectedArticle.source_log.citations.map((cite, i) => (
-                          <div key={i} className="flex items-start gap-2 bg-gray-900 border border-gray-850 p-2.5 rounded-xl">
-                            <Link2 className="w-3.5 h-3.5 text-gray-500 shrink-0 mt-0.5" />
-                            <span className="text-[10px] text-gray-400 font-medium leading-relaxed">{cite}</span>
+                          <div key={i} className="flex items-start gap-2 bg-slate-50 border border-slate-200 p-2.5 rounded-xl">
+                            <Link2 className="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" />
+                            <span className="text-[10px] text-slate-600 font-medium leading-relaxed">{cite}</span>
                           </div>
                         ))}
                       </div>

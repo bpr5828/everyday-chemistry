@@ -226,21 +226,21 @@ export default function XRayHouse({ onSearchCompound }: XRayHouseProps) {
   return (
     <div className="space-y-6">
       {/* Introduction Card */}
-      <div className="p-6 bg-gradient-to-r from-green-950/20 via-navy-900/40 to-slate-950/40 border border-green-500/20 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div className="p-6 bg-gradient-to-r from-green-50 via-slate-100 to-white border border-green-200 rounded-3xl flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xs">
         <div className="space-y-1.5">
-          <h2 className="text-3xl font-extrabold font-display tracking-tight text-white m-0">The Molecular X-Ray House</h2>
-          <p className="text-sm text-gray-400 max-w-2xl">
+          <h2 className="text-3xl font-extrabold font-display tracking-tight text-slate-800 m-0">The Molecular X-Ray House</h2>
+          <p className="text-sm text-slate-600 max-w-2xl">
             Click through rooms and tap glowing nodes to scan everyday objects and reveal the underlying chemical structures and compounds that power our homes.
           </p>
         </div>
-        <div className="flex items-center gap-2 bg-green-500/10 border border-green-500/20 px-4 py-2 rounded-2xl">
-          <Eye className="w-5 h-5 text-green-400" />
-          <span className="text-xs text-green-400 font-semibold uppercase tracking-wider">X-Ray Scanner Engaged</span>
+        <div className="flex items-center gap-2 bg-green-50 border border-green-200 px-4 py-2 rounded-2xl">
+          <Eye className="w-5 h-5 text-green-700" />
+          <span className="text-xs text-green-700 font-semibold uppercase tracking-wider">X-Ray Scanner Engaged</span>
         </div>
       </div>
 
       {/* Room Tabs */}
-      <div className="flex border-b border-gray-800/80 gap-2">
+      <div className="flex border-b border-slate-200 gap-2">
         {rooms.map(room => (
           <button
             key={room.id}
@@ -250,8 +250,8 @@ export default function XRayHouse({ onSearchCompound }: XRayHouseProps) {
             }}
             className={`px-6 py-3.5 font-display text-sm font-semibold border-b-2 transition-all ${
               activeRoom === room.id
-                ? 'border-green-400 text-green-400'
-                : 'border-transparent text-gray-500 hover:text-gray-300'
+                ? 'border-green-500 text-green-600'
+                : 'border-transparent text-slate-500 hover:text-slate-850'
             }`}
           >
             {room.name}
@@ -262,23 +262,23 @@ export default function XRayHouse({ onSearchCompound }: XRayHouseProps) {
       {/* Layout Explorer */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch">
         {/* Room Visualizer Blueprint */}
-        <div className="lg:col-span-2 bg-[#0b0f19] border border-gray-800 rounded-3xl p-8 relative overflow-hidden flex flex-col items-center justify-center min-h-[400px]">
+        <div className="lg:col-span-2 bg-white border border-slate-200 rounded-3xl p-8 relative overflow-hidden flex flex-col items-center justify-center min-h-[400px] shadow-sm">
           {/* Blueprint grid background */}
-          <div className="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:16px_16px] opacity-20" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#070a13]/30 to-[#070a13]/80 pointer-events-none" />
+          <div className="absolute inset-0 bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:16px_16px] opacity-30" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-50/10 to-slate-50/40 pointer-events-none" />
 
           {/* Interactive room name */}
           <div className="absolute top-6 left-6 z-10">
-            <h3 className="text-lg font-bold font-display text-white m-0">{currentRoom.name}</h3>
-            <p className="text-xs text-gray-500 mt-1">{currentRoom.desc}</p>
+            <h3 className="text-lg font-bold font-display text-slate-800 m-0">{currentRoom.name}</h3>
+            <p className="text-xs text-slate-400 mt-1">{currentRoom.desc}</p>
           </div>
 
           {/* Styled Room SVG / Canvas representation */}
-          <div className="w-full max-w-lg aspect-square relative border border-dashed border-gray-800/60 rounded-2xl bg-[#0f172a]/20 flex items-center justify-center mt-6">
+          <div className="w-full max-w-lg aspect-square relative border border-dashed border-slate-350/60 rounded-2xl bg-slate-50/50 flex items-center justify-center mt-6">
             
             {/* Draw active room background schematic */}
             {activeRoom === 'kitchen' && (
-              <svg viewBox="0 0 100 100" className="w-4/5 h-4/5 text-gray-700/40 opacity-70">
+              <svg viewBox="0 0 100 100" className="w-4/5 h-4/5 text-slate-400/40 opacity-70">
                 <rect x="10" y="10" width="80" height="80" rx="5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3"/>
                 <line x1="10" y1="50" x2="90" y2="50" stroke="currentColor" strokeWidth="1"/>
                 {/* Kitchen counter outline */}
@@ -293,7 +293,7 @@ export default function XRayHouse({ onSearchCompound }: XRayHouseProps) {
             )}
 
             {activeRoom === 'bathroom' && (
-              <svg viewBox="0 0 100 100" className="w-4/5 h-4/5 text-gray-700/40 opacity-70">
+              <svg viewBox="0 0 100 100" className="w-4/5 h-4/5 text-slate-400/40 opacity-70">
                 <rect x="10" y="10" width="80" height="80" rx="5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3"/>
                 {/* Bathtub outline */}
                 <rect x="15" y="15" width="20" height="50" rx="8" fill="none" stroke="currentColor" strokeWidth="1.5"/>
@@ -305,7 +305,7 @@ export default function XRayHouse({ onSearchCompound }: XRayHouseProps) {
             )}
 
             {activeRoom === 'living_room' && (
-              <svg viewBox="0 0 100 100" className="w-4/5 h-4/5 text-gray-700/40 opacity-70">
+              <svg viewBox="0 0 100 100" className="w-4/5 h-4/5 text-slate-400/40 opacity-70">
                 <rect x="10" y="10" width="80" height="80" rx="5" fill="none" stroke="currentColor" strokeWidth="1.5" strokeDasharray="3 3"/>
                 {/* Sofa outline */}
                 <rect x="20" y="60" width="60" height="25" rx="4" fill="none" stroke="currentColor" strokeWidth="1.5"/>
@@ -326,8 +326,8 @@ export default function XRayHouse({ onSearchCompound }: XRayHouseProps) {
                   style={{ top: item.markerPos.top, left: item.markerPos.left }}
                   className={`absolute -translate-x-1/2 -translate-y-1/2 flex items-center justify-center p-3 rounded-full border transition-all duration-300 group z-20 ${
                     isSelected
-                      ? 'bg-green-500 text-[#070a13] border-white scale-125 shadow-lg shadow-green-500/40'
-                      : 'bg-[#111827]/90 text-green-400 border-green-500/40 hover:scale-110 hover:border-green-400 shadow-md'
+                      ? 'bg-green-600 text-white border-white scale-125 shadow-lg shadow-green-200'
+                      : 'bg-white text-green-600 border-green-300 hover:scale-110 hover:border-green-500 shadow-sm'
                   }`}
                 >
                   <span className={`absolute inset-0 rounded-full bg-green-500/20 group-hover:animate-ping ${isSelected ? 'hidden' : ''}`} />
@@ -336,8 +336,8 @@ export default function XRayHouse({ onSearchCompound }: XRayHouseProps) {
                   </span>
                   
                   {/* Floating marker label */}
-                  <span className={`absolute top-full mt-1 px-2.5 py-1 text-[10px] font-bold rounded-lg whitespace-nowrap bg-gray-900 border border-gray-800 pointer-events-none transition-opacity duration-200 ${
-                    isSelected ? 'opacity-100 text-white border-green-500/40' : 'opacity-0 group-hover:opacity-100 text-gray-300'
+                  <span className={`absolute top-full mt-1 px-2.5 py-1 text-[10px] font-bold rounded-lg whitespace-nowrap bg-slate-800 border border-slate-700 text-white pointer-events-none transition-opacity duration-200 shadow-md ${
+                    isSelected ? 'opacity-100 border-green-500/40' : 'opacity-0 group-hover:opacity-100'
                   }`}>
                     {item.name}
                   </span>
@@ -346,39 +346,39 @@ export default function XRayHouse({ onSearchCompound }: XRayHouseProps) {
             })}
           </div>
 
-          <div className="absolute bottom-6 right-6 text-gray-500 text-[11px] font-semibold">
+          <div className="absolute bottom-6 right-6 text-slate-400 text-[11px] font-semibold">
             Click nodes to trigger scan
           </div>
         </div>
 
         {/* Compound Analyzer Scanner Side-Panel */}
-        <div className="bg-[#0b0f19] border border-gray-800 rounded-3xl p-6 flex flex-col justify-between">
+        <div className="bg-white border border-slate-200 rounded-3xl p-6 flex flex-col justify-between shadow-sm">
           {selectedItem ? (
             <div className="space-y-6 h-full flex flex-col justify-between">
               {/* Header */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] text-green-400 font-extrabold uppercase tracking-widest bg-green-500/10 border border-green-500/20 px-2.5 py-1 rounded-lg">
+                  <span className="text-[10px] text-green-700 font-extrabold uppercase tracking-widest bg-green-50 border border-green-200 px-2.5 py-1 rounded-lg">
                     Scanner Output
                   </span>
                   <span className={`text-[10px] font-extrabold uppercase tracking-widest px-2.5 py-1 rounded-lg border ${
                     selectedItem.safety === 'Green' 
-                      ? 'bg-green-500/10 border-green-500/30 text-green-400' 
+                      ? 'bg-green-50 border-green-200 text-green-700' 
                       : selectedItem.safety === 'Yellow'
-                      ? 'bg-yellow-500/10 border-yellow-500/30 text-yellow-400'
-                      : 'bg-red-500/10 border-red-500/30 text-red-400'
+                      ? 'bg-yellow-50 border-yellow-200 text-yellow-750'
+                      : 'bg-red-50 border-red-200 text-red-700'
                   }`}>
                     Safety: {selectedItem.safety}
                   </span>
                 </div>
 
                 <div className="space-y-1">
-                  <h3 className="text-2xl font-black font-display tracking-tight text-white leading-tight">
+                  <h3 className="text-2xl font-black font-display tracking-tight text-slate-850 leading-tight">
                     {selectedItem.name}
                   </h3>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-sm font-semibold text-gray-400">{selectedItem.chemicalName}</span>
-                    <span className="text-xs font-mono bg-gray-900 border border-gray-800 text-purple-400 px-2 py-0.5 rounded-md">
+                    <span className="text-sm font-semibold text-slate-500">{selectedItem.chemicalName}</span>
+                    <span className="text-xs font-mono bg-purple-50 border border-purple-100 text-purple-700 px-2 py-0.5 rounded-md">
                       {selectedItem.formula}
                     </span>
                   </div>
@@ -386,43 +386,43 @@ export default function XRayHouse({ onSearchCompound }: XRayHouseProps) {
 
                 {/* Main description */}
                 <div className="space-y-3 pt-2">
-                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">
+                  <h4 className="text-xs font-bold text-slate-450 uppercase tracking-wider block mb-1">
                     Description & Chemistry
                   </h4>
-                  <p className="text-xs text-gray-300 leading-relaxed">
+                  <p className="text-xs text-slate-650 leading-relaxed">
                     {selectedItem.details}
                   </p>
                 </div>
 
                 {/* Uses */}
                 <div className="space-y-2">
-                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-1">
+                  <h4 className="text-xs font-bold text-slate-450 uppercase tracking-wider block mb-1">
                     Common Uses
                   </h4>
-                  <p className="text-xs text-gray-300 font-semibold bg-gray-900/60 border border-gray-800/80 p-3 rounded-xl">
+                  <p className="text-xs text-slate-700 font-semibold bg-slate-50 border border-slate-200 p-3 rounded-xl">
                     {selectedItem.uses}
                   </p>
                 </div>
 
                 {/* Safety details */}
-                <div className="space-y-2.5 bg-yellow-500/5 border border-yellow-500/10 p-3.5 rounded-xl">
-                  <div className="flex items-center gap-2 text-yellow-500">
+                <div className="space-y-2.5 bg-yellow-50/50 border border-yellow-100 p-3.5 rounded-xl">
+                  <div className="flex items-center gap-2 text-yellow-800">
                     <AlertTriangle className="w-4 h-4" />
                     <h4 className="text-xs font-bold uppercase tracking-wider">
                       Exposure & Safety Context
                     </h4>
                   </div>
-                  <p className="text-[11px] text-gray-400 leading-normal">
+                  <p className="text-[11px] text-slate-600 leading-normal">
                     {selectedItem.safetyNote}
                   </p>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="pt-4 border-t border-gray-800/80">
+              <div className="pt-4 border-t border-slate-200">
                 <button
                   onClick={() => onSearchCompound(selectedItem.compoundUuid)}
-                  className="w-full bg-green-500 hover:bg-green-600 active:scale-[0.98] text-[#070a13] font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-xs transition-all duration-150"
+                  className="w-full bg-green-600 hover:bg-green-700 active:scale-[0.98] text-white font-bold py-3 px-4 rounded-xl flex items-center justify-center gap-2 text-xs transition-all duration-150 shadow-sm"
                 >
                   <span>De-Jargonize Compound Card</span>
                   <ArrowRight className="w-4 h-4" />
@@ -431,30 +431,30 @@ export default function XRayHouse({ onSearchCompound }: XRayHouseProps) {
             </div>
           ) : (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-4 p-6">
-              <div className="p-4 bg-gray-900 border border-gray-800 rounded-full text-gray-600 animate-pulse">
+              <div className="p-4 bg-slate-100 border border-slate-200 rounded-full text-slate-400 animate-pulse">
                 <Home className="w-10 h-10" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-sm font-bold text-gray-300">No Object Inspected</h3>
-                <p className="text-xs text-gray-500 max-w-xs leading-relaxed">
+                <h3 className="text-sm font-bold text-slate-750">No Object Inspected</h3>
+                <p className="text-xs text-slate-500 max-w-xs leading-relaxed">
                   Select any highlighted glowing circular marker in the room layout blueprint to initialize the molecular x-ray scanner.
                 </p>
               </div>
 
-              <div className="w-full pt-4 border-t border-gray-800/50 mt-6 text-left space-y-3">
-                <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Scanning Principles</h4>
+              <div className="w-full pt-4 border-t border-slate-200 mt-6 text-left space-y-3">
+                <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Scanning Principles</h4>
                 <div className="space-y-2">
                   <div className="flex items-start gap-2.5">
-                    <ShieldCheck className="w-3.5 h-3.5 text-green-400 mt-0.5 shrink-0" />
-                    <span className="text-[11px] text-gray-400"><strong className="text-gray-300">Green Tier:</strong> Safe for standard contact and consumption.</span>
+                    <ShieldCheck className="w-3.5 h-3.5 text-green-600 mt-0.5 shrink-0" />
+                    <span className="text-[11px] text-slate-600"><strong className="text-slate-800">Green Tier:</strong> Safe for standard contact and consumption.</span>
                   </div>
                   <div className="flex items-start gap-2.5">
-                    <AlertTriangle className="w-3.5 h-3.5 text-yellow-400 mt-0.5 shrink-0" />
-                    <span className="text-[11px] text-gray-400"><strong className="text-gray-300">Yellow Tier:</strong> Avoid ingestion, can cause irritation at high concentrations.</span>
+                    <AlertTriangle className="w-3.5 h-3.5 text-yellow-600 mt-0.5 shrink-0" />
+                    <span className="text-[11px] text-slate-600"><strong className="text-slate-800">Yellow Tier:</strong> Avoid ingestion, can cause irritation at high concentrations.</span>
                   </div>
                   <div className="flex items-start gap-2.5">
-                    <AlertTriangle className="w-3.5 h-3.5 text-red-400 mt-0.5 shrink-0" />
-                    <span className="text-[11px] text-gray-400"><strong className="text-gray-300">Red Tier:</strong> Corrosive or toxic in raw states. Handle with extreme care.</span>
+                    <AlertTriangle className="w-3.5 h-3.5 text-red-600 mt-0.5 shrink-0" />
+                    <span className="text-[11px] text-slate-600"><strong className="text-slate-800">Red Tier:</strong> Corrosive or toxic in raw states. Handle with extreme care.</span>
                   </div>
                 </div>
               </div>

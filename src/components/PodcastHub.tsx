@@ -198,8 +198,8 @@ export default function PodcastHub({ onSearchCompound }: PodcastHubProps) {
     <div className="space-y-6">
       {/* Title */}
       <div className="space-y-1">
-        <h2 className="text-3xl font-black font-display text-white m-0">Podcast Hub & Visual Annotations</h2>
-        <p className="text-sm text-gray-400">
+        <h2 className="text-3xl font-black font-display text-slate-800 m-0">Podcast Hub & Visual Annotations</h2>
+        <p className="text-sm text-slate-500">
           Listen to conversational chemistry lectures synced in real-time with visual molecular cards, chemical details, and bibliography details.
         </p>
       </div>
@@ -207,10 +207,10 @@ export default function PodcastHub({ onSearchCompound }: PodcastHubProps) {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 items-stretch">
         
         {/* Playlist selector */}
-        <div className="lg:col-span-1 bg-[#0b0f19] border border-gray-800 rounded-3xl p-6 space-y-4">
-          <div className="flex items-center gap-2 border-b border-gray-800 pb-3">
-            <ListMusic className="w-5 h-5 text-green-400" />
-            <h3 className="text-sm font-bold text-gray-300">Episodes List</h3>
+        <div className="lg:col-span-1 bg-white border border-slate-200 rounded-3xl p-6 space-y-4 shadow-sm">
+          <div className="flex items-center gap-2 border-b border-slate-200 pb-3">
+            <ListMusic className="w-5 h-5 text-green-700" />
+            <h3 className="text-sm font-bold text-slate-750">Episodes List</h3>
           </div>
 
           <div className="flex flex-col gap-2.5">
@@ -220,12 +220,12 @@ export default function PodcastHub({ onSearchCompound }: PodcastHubProps) {
                 onClick={() => setActiveEpisodeId(ep.id)}
                 className={`w-full text-left p-3.5 rounded-2xl border transition-all ${
                   activeEpisodeId === ep.id
-                    ? 'bg-green-500/10 border-green-500/30 text-white font-medium'
-                    : 'bg-gray-900/30 border-gray-800 hover:border-gray-700 text-gray-400 font-normal'
+                    ? 'bg-green-50 border border-green-200 text-green-900 font-semibold shadow-xs'
+                    : 'bg-slate-50 border border-slate-200 hover:border-slate-350 hover:bg-slate-100 text-slate-700 font-normal'
                 }`}
               >
-                <h4 className="text-xs font-bold font-display text-white leading-normal m-0">{ep.title}</h4>
-                <p className="text-[10px] text-gray-500 leading-normal mt-1 m-0">{ep.desc}</p>
+                <h4 className="text-xs font-bold font-display text-slate-850 leading-normal m-0">{ep.title}</h4>
+                <p className="text-[10px] text-slate-450 leading-normal mt-1 m-0">{ep.desc}</p>
               </button>
             ))}
           </div>
@@ -235,7 +235,7 @@ export default function PodcastHub({ onSearchCompound }: PodcastHubProps) {
         <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-5 gap-6">
           
           {/* Transcript & Player Panel */}
-          <div className="md:col-span-3 bg-[#0b0f19] border border-gray-800 rounded-3xl p-6 flex flex-col justify-between space-y-6">
+          <div className="md:col-span-3 bg-white border border-slate-200 rounded-3xl p-6 flex flex-col justify-between space-y-6 shadow-sm">
             {episodeData ? (
               <>
                 {/* Audio Engine */}
@@ -248,9 +248,9 @@ export default function PodcastHub({ onSearchCompound }: PodcastHubProps) {
                 />
 
                 {/* Header info */}
-                <div className="space-y-1 pb-3 border-b border-gray-800/80">
-                  <span className="text-[10px] text-green-400 font-extrabold uppercase tracking-widest block">Now Playing</span>
-                  <h3 className="text-xl font-bold font-display text-white truncate m-0">
+                <div className="space-y-1 pb-3 border-b border-slate-200">
+                  <span className="text-[10px] text-green-700 font-extrabold uppercase tracking-widest block">Now Playing</span>
+                  <h3 className="text-xl font-bold font-display text-slate-800 truncate m-0">
                     {episodes.find(e => e.id === activeEpisodeId)?.title}
                   </h3>
                 </div>
@@ -268,12 +268,12 @@ export default function PodcastHub({ onSearchCompound }: PodcastHubProps) {
                         onClick={() => jumpToTime(seg.start_seconds)}
                         className={`p-3.5 rounded-2xl border text-xs cursor-pointer transition-all duration-200 ${
                           isHighlighted
-                            ? 'bg-green-500/10 border-green-500/35 text-white font-medium shadow-md shadow-green-500/5'
-                            : 'bg-gray-900/35 border-transparent text-gray-400 hover:text-gray-250 hover:bg-gray-900/60'
+                            ? 'bg-green-50 border border-green-200 text-green-905 font-semibold shadow-xs'
+                            : 'bg-slate-50 border border-slate-200 hover:border-slate-300 hover:bg-slate-100 text-slate-650'
                         }`}
                       >
-                        <div className="flex items-center gap-1.5 text-[9px] font-bold text-gray-500 mb-1.5">
-                          <Clock className="w-3 h-3 text-gray-550" />
+                        <div className="flex items-center gap-1.5 text-[9px] font-bold text-slate-450 mb-1.5">
+                          <Clock className="w-3 h-3 text-slate-400" />
                           <span>{formatTime(seg.start_seconds)}</span>
                         </div>
                         <p className="leading-relaxed m-0">{seg.text}</p>
@@ -283,19 +283,19 @@ export default function PodcastHub({ onSearchCompound }: PodcastHubProps) {
                 </div>
 
                 {/* Player Controls Bar */}
-                <div className="pt-4 border-t border-gray-800/80 space-y-3">
+                <div className="pt-4 border-t border-slate-200 space-y-3">
                   {/* Slider Progress Bar */}
                   <div className="flex items-center gap-3">
-                    <span className="text-[10px] font-mono text-gray-500">{formatTime(currentTime)}</span>
+                    <span className="text-[10px] font-mono text-slate-450">{formatTime(currentTime)}</span>
                     <input
                       type="range"
                       min={0}
                       max={duration || episodeData.duration_seconds}
                       value={currentTime}
                       onChange={handleSeek}
-                      className="flex-1 accent-green-400 h-1 bg-gray-850 rounded-lg cursor-pointer appearance-none"
+                      className="flex-1 accent-green-600 h-1 bg-slate-200 rounded-lg cursor-pointer appearance-none"
                     />
-                    <span className="text-[10px] font-mono text-gray-500">
+                    <span className="text-[10px] font-mono text-slate-455">
                       {formatTime(duration || episodeData.duration_seconds)}
                     </span>
                   </div>
@@ -305,7 +305,7 @@ export default function PodcastHub({ onSearchCompound }: PodcastHubProps) {
                     <div className="flex items-center gap-3">
                       <button
                         onClick={togglePlay}
-                        className="bg-green-500 hover:bg-green-600 active:scale-95 text-[#070a13] p-3.5 rounded-full transition-all flex items-center justify-center cursor-pointer shadow-lg shadow-green-500/10"
+                        className="bg-green-650 hover:bg-green-700 active:scale-95 text-white p-3.5 rounded-full transition-all flex items-center justify-center cursor-pointer shadow-md shadow-green-200"
                       >
                         {isPlaying ? (
                           <Pause className="w-5 h-5 fill-current" />
@@ -315,11 +315,11 @@ export default function PodcastHub({ onSearchCompound }: PodcastHubProps) {
                       </button>
                       
                       <div className="flex flex-col">
-                        <span className="text-[10px] text-gray-500 font-bold uppercase tracking-wider">Audio Stream</span>
-                        <span className="text-xs text-gray-300 font-semibold flex items-center gap-1.5">
+                        <span className="text-[10px] text-slate-450 font-bold uppercase tracking-wider">Audio Stream</span>
+                        <span className="text-xs text-slate-700 font-semibold flex items-center gap-1.5">
                           {isPlaying ? (
                             <>
-                              <Activity className="w-3.5 h-3.5 text-green-400 animate-pulse" />
+                              <Activity className="w-3.5 h-3.5 text-green-700 animate-pulse" />
                               <span>Live Annotation Sync</span>
                             </>
                           ) : (
@@ -329,69 +329,69 @@ export default function PodcastHub({ onSearchCompound }: PodcastHubProps) {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5 text-gray-500 text-[10px] font-medium bg-gray-900 border border-gray-850 px-3 py-1.5 rounded-xl">
-                      <Volume2 className="w-4 h-4 text-gray-550" />
+                    <div className="flex items-center gap-1.5 text-slate-600 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-xl shadow-xs">
+                      <Volume2 className="w-4 h-4 text-slate-400" />
                       <span>Audio Playback</span>
                     </div>
                   </div>
                 </div>
               </>
             ) : (
-              <div className="h-full flex items-center justify-center py-20 text-gray-500 animate-pulse">
+              <div className="h-full flex items-center justify-center py-20 text-slate-400 animate-pulse">
                 Loading podcast specs...
               </div>
             )}
           </div>
 
           {/* Sync Annotations Display panel */}
-          <div className="md:col-span-2 bg-[#0b0f19] border border-gray-800 rounded-3xl p-6 flex flex-col justify-between">
+          <div className="md:col-span-2 bg-white border border-slate-200 rounded-3xl p-6 flex flex-col justify-between shadow-sm">
             {activeAnnotation ? (
               <div className="space-y-6 h-full flex flex-col justify-between animate-fade-in">
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between border-b border-gray-850 pb-3">
-                    <span className="text-[10px] text-purple-400 font-extrabold uppercase tracking-widest bg-purple-500/10 border border-purple-500/25 px-2.5 py-1 rounded-lg">
+                  <div className="flex items-center justify-between border-b border-slate-250/60 pb-3">
+                    <span className="text-[10px] text-purple-750 font-extrabold uppercase tracking-widest bg-purple-55 border border-purple-200 px-2.5 py-1 rounded-lg">
                       Timeline Annotation
                     </span>
-                    <span className="text-[10px] text-gray-500 font-mono">
+                    <span className="text-[10px] text-slate-450 font-mono">
                       {formatTime(activeAnnotation.start_seconds)} - {formatTime(activeAnnotation.end_seconds)}
                     </span>
                   </div>
 
                   <div className="space-y-2">
-                    <h3 className="text-lg font-bold font-display text-white m-0 leading-tight">
+                    <h3 className="text-lg font-bold font-display text-slate-805 m-0 leading-tight">
                       {activeAnnotation.annotation.title}
                     </h3>
-                    <p className="text-xs text-gray-400 leading-relaxed">
+                    <p className="text-xs text-slate-655 leading-relaxed">
                       {activeAnnotation.annotation.body}
                     </p>
                   </div>
 
                   {activeAnnotation.compound && (
-                    <div className="bg-gray-900/50 border border-gray-850 p-4 rounded-2xl space-y-3 mt-4">
+                    <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-3 mt-4 shadow-xs">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wider leading-none">Related Compound</h4>
-                          <span className="text-sm font-extrabold text-white mt-2 block">{activeAnnotation.compound.common_name}</span>
+                          <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider leading-none">Related Compound</h4>
+                          <span className="text-sm font-extrabold text-slate-800 mt-2 block">{activeAnnotation.compound.common_name}</span>
                         </div>
-                        <span className="text-[9px] font-mono text-purple-400 bg-gray-900 px-2 py-0.5 rounded border border-gray-800">
+                        <span className="text-[9px] font-mono text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-100">
                           {activeAnnotation.compound.molecular_formula}
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between pt-2.5 border-t border-gray-850">
+                      <div className="flex items-center justify-between pt-2.5 border-t border-slate-200">
                         <span className={`text-[9px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded ${
                           activeAnnotation.compound.safety_tier_rating === 'Green'
-                            ? 'bg-green-500/10 text-green-400'
+                            ? 'bg-green-50 text-green-700'
                             : activeAnnotation.compound.safety_tier_rating === 'Yellow'
-                            ? 'bg-yellow-500/10 text-yellow-400'
-                            : 'bg-red-500/10 text-red-400'
+                            ? 'bg-yellow-50 text-yellow-755'
+                            : 'bg-red-55/10 text-red-700'
                         }`}>
                           {activeAnnotation.compound.safety_tier_rating}
                         </span>
                         
                         <button
                           onClick={() => onSearchCompound(activeAnnotation.compound!.compound_uuid)}
-                          className="text-[10px] text-green-400 hover:text-green-300 font-bold flex items-center gap-1 cursor-pointer transition-all"
+                          className="text-[10px] text-green-700 hover:text-green-800 font-bold flex items-center gap-1 cursor-pointer transition-all"
                         >
                           <span>Chemical details</span>
                           <ArrowRight className="w-3.5 h-3.5" />
@@ -402,17 +402,17 @@ export default function PodcastHub({ onSearchCompound }: PodcastHubProps) {
                 </div>
 
                 {episodeData && episodeData.linked_research_papers.length > 0 && (
-                  <div className="pt-4 border-t border-gray-800/85">
-                    <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest block mb-2">Bibliography Sources</h4>
+                  <div className="pt-4 border-t border-slate-200">
+                    <h4 className="text-[10px] font-bold text-slate-450 uppercase tracking-widest block mb-2">Bibliography Sources</h4>
                     {episodeData.linked_research_papers.map((paper, i) => (
                       <a
                         key={i}
                         href={paper}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-[10px] text-green-450 hover:text-green-300 truncate flex items-center gap-1 transition-all"
+                        className="text-[10px] text-green-700 hover:text-green-800 truncate flex items-center gap-1 transition-all"
                       >
-                        <Link2 className="w-3.5 h-3.5 text-gray-650 shrink-0" />
+                        <Link2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                         <span>Source publication trail link</span>
                       </a>
                     ))}
@@ -420,13 +420,13 @@ export default function PodcastHub({ onSearchCompound }: PodcastHubProps) {
                 )}
               </div>
             ) : (
-              <div className="h-full flex flex-col items-center justify-center text-center space-y-4 p-6 py-12">
-                <div className="p-3.5 bg-gray-900 border border-gray-800 rounded-full text-gray-600 animate-pulse">
+              <div className="h-full flex flex-col items-center justify-center text-center space-y-4 p-6 py-12 bg-white border border-slate-200 rounded-3xl min-h-[400px] shadow-sm">
+                <div className="p-3.5 bg-slate-100 border border-slate-200 rounded-full text-slate-400 animate-pulse">
                   <Volume2 className="w-8 h-8" />
                 </div>
                 <div className="space-y-1.5">
-                  <h3 className="text-xs font-bold text-gray-300">Live annotation deck</h3>
-                  <p className="text-[11px] text-gray-550 max-w-xs leading-normal">
+                  <h3 className="text-xs font-bold text-slate-700">Live annotation deck</h3>
+                  <p className="text-[11px] text-slate-500 max-w-xs leading-normal">
                     Audio visualizer is idle. Start playing the audio stream. Annotations detailing compound formulas and links will appear here dynamically.
                   </p>
                 </div>
