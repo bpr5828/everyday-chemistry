@@ -1,29 +1,20 @@
-import json
+"""
+Everyday Chemistry API — fully self-contained, no database.
+All data is hardcoded in-memory so this works as a zero-dependency
+serverless function on Vercel, Netlify, Railway, etc.
+"""
 import uuid
-import hashlib
-from contextlib import asynccontextmanager
-from fastapi import FastAPI, Depends, HTTPException, Query
+import json
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.orm import Session
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
-from .database import get_db, engine, Base
-from .models import ChemicalCompound, ConsumerProduct, ProductIngredient, Article, PodcastTrack, TimedAnnotation, CitizenMetric
+# ---------------------------------------------------------------------------
+# App Setup
+# ---------------------------------------------------------------------------
+app = FastAPI(title="Everyday Chemistry API", version="2.0.0")
 
-
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    # Create all tables on cold-start (safe to call multiple times)
-    Base.metadata.create_all(bind=engine)
-    # Seed minimal demo data if the DB is empty
-    _seed_if_empty()
-    yield
-
-
-app = FastAPI(title="Everyday Chemistry API", version="1.0.0", lifespan=lifespan)
-
-# CORS middleware configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -32,523 +23,504 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ---------------------------------------------------------------------------
+# Hardcoded Data Store
+# ---------------------------------------------------------------------------
+COMPOUNDS = [
+    {
+        "compound_uuid": "c001",
+        "iupac_name": "sodium chloride",
+        "common_name": "Table Salt",
+        "molecular_formula": "NaCl",
+        "safety_tier_rating": "Green",
+        "description": "An ionic compound of sodium and chlorine, essential to human biology and the most common seasoning worldwide.",
+        "function_txt": "Flavoring, preservative, electrolyte balance",
+        "mechanism_of_action_txt": "Dissociates into Na⁺ and Cl⁻ ions in water; regulates osmotic pressure across cell membranes.",
+        "misconceptions_txt": "Salt alone doesn't cause hypertension in everyone — genetic sensitivity varies widely.",
+        "alternatives_txt": "Potassium chloride (KCl) as a lower-sodium substitute.",
+        "source_urls": ["https://pubchem.ncbi.nlm.nih.gov/compound/5234"],
+    },
+    {
+        "compound_uuid": "c002",
+        "iupac_name": "acetic acid",
+        "common_name": "Vinegar (Acetic Acid)",
+        "molecular_formula": "CH₃COOH",
+        "safety_tier_rating": "Green",
+        "description": "The main component of vinegar, a weak organic acid used in cooking and cleaning.",
+        "function_txt": "Preservative, cleaning agent, flavor enhancer",
+        "mechanism_of_action_txt": "Weak acid that lowers pH; at concentrations >5% is antimicrobial.",
+        "misconceptions_txt": "Vinegar is NOT an effective disinfectant against dangerous pathogens like Salmonella.",
+        "alternatives_txt": "Citric acid for similar acidic cleaning applications.",
+        "source_urls": ["https://pubchem.ncbi.nlm.nih.gov/compound/176"],
+    },
+    {
+        "compound_uuid": "c003",
+        "iupac_name": "sodium lauryl sulfate",
+        "common_name": "SLS (Sodium Lauryl Sulfate)",
+        "molecular_formula": "C₁₂H₂₅NaO₄S",
+        "safety_tier_rating": "Yellow",
+        "description": "A surfactant and foaming agent found in shampoos, toothpastes, and body washes.",
+        "function_txt": "Surfactant, foaming/lathering agent",
+        "mechanism_of_action_txt": "Amphiphilic molecule that disrupts lipid bilayers; reduces surface tension to lift oils from surfaces.",
+        "misconceptions_txt": "SLS is not a carcinogen — multiple systematic reviews confirm it is safe at typical concentrations.",
+        "alternatives_txt": "Sodium laureth sulfate (SLES), coco-glucoside for sensitive skin formulas.",
+        "source_urls": ["https://pubchem.ncbi.nlm.nih.gov/compound/3423265"],
+    },
+    {
+        "compound_uuid": "c004",
+        "iupac_name": "ascorbic acid",
+        "common_name": "Vitamin C",
+        "molecular_formula": "C₆H₈O₆",
+        "safety_tier_rating": "Green",
+        "description": "An essential vitamin and powerful antioxidant found naturally in citrus fruits and many vegetables.",
+        "function_txt": "Antioxidant, collagen synthesis cofactor, immune support",
+        "mechanism_of_action_txt": "Donates electrons to neutralize free radicals; required for hydroxylation of proline and lysine in collagen.",
+        "misconceptions_txt": "Mega-doses of Vitamin C do not cure the common cold — evidence shows only modest duration reduction.",
+        "alternatives_txt": "Rose hip extract, acerola cherry for natural vitamin C sources.",
+        "source_urls": ["https://pubchem.ncbi.nlm.nih.gov/compound/54670067"],
+    },
+    {
+        "compound_uuid": "c005",
+        "iupac_name": "caffeine",
+        "common_name": "Caffeine",
+        "molecular_formula": "C₈H₁₀N₄O₂",
+        "safety_tier_rating": "Green",
+        "description": "The world's most consumed psychoactive compound, naturally found in coffee, tea, and cacao.",
+        "function_txt": "CNS stimulant, adenosine receptor antagonist",
+        "mechanism_of_action_txt": "Competitively inhibits adenosine receptors (A1 and A2A), blocking sleep signals and increasing alertness.",
+        "misconceptions_txt": "Moderate caffeine consumption (up to 400 mg/day) is considered safe for most healthy adults — it does not cause heart disease.",
+        "alternatives_txt": "L-theanine for calm focus without jitteriness; adaptogenic herbs like Rhodiola.",
+        "source_urls": ["https://pubchem.ncbi.nlm.nih.gov/compound/2519"],
+    },
+    {
+        "compound_uuid": "c006",
+        "iupac_name": "titanium dioxide",
+        "common_name": "Titanium Dioxide",
+        "molecular_formula": "TiO₂",
+        "safety_tier_rating": "Yellow",
+        "description": "A white pigment and UV filter used in sunscreens, paints, and food coatings.",
+        "function_txt": "UV filter, white pigment, food colorant (E171)",
+        "mechanism_of_action_txt": "Reflects and scatters UV radiation; in nanoparticle form may generate reactive oxygen species when photoactivated.",
+        "misconceptions_txt": "The EU banned TiO₂ as a food additive in 2022 due to genotoxicity concerns; however topical use in sunscreens is still widely considered safe.",
+        "alternatives_txt": "Zinc oxide (ZnO) as a mineral UV filter; non-nano formulations where possible.",
+        "source_urls": ["https://pubchem.ncbi.nlm.nih.gov/compound/26042"],
+    },
+    {
+        "compound_uuid": "c007",
+        "iupac_name": "bisphenol A",
+        "common_name": "BPA (Bisphenol A)",
+        "molecular_formula": "C₁₅H₁₆O₂",
+        "safety_tier_rating": "Red",
+        "description": "An industrial chemical used to make polycarbonate plastics and epoxy resins; a known endocrine disruptor.",
+        "function_txt": "Plasticizer, monomer for polycarbonate production",
+        "mechanism_of_action_txt": "Mimics estrogen by binding to estrogen receptors (ERα/ERβ), disrupting hormonal signaling at very low doses.",
+        "misconceptions_txt": "BPA-free plastics may still leach structurally similar bisphenols (BPS, BPF) with similar endocrine-disrupting effects.",
+        "alternatives_txt": "Stainless steel, glass, or certified BPA/BPS-free Tritan™ plastics for food contact.",
+        "source_urls": ["https://pubchem.ncbi.nlm.nih.gov/compound/6623"],
+    },
+    {
+        "compound_uuid": "c008",
+        "iupac_name": "hydrogen peroxide",
+        "common_name": "Hydrogen Peroxide",
+        "molecular_formula": "H₂O₂",
+        "safety_tier_rating": "Yellow",
+        "description": "A mild antiseptic and bleaching agent used in wound care, teeth whitening, and hair coloring.",
+        "function_txt": "Antiseptic, bleaching agent, oxidizing agent",
+        "mechanism_of_action_txt": "Releases reactive oxygen species that damage bacterial cell membranes and oxidize organic chromophores.",
+        "misconceptions_txt": "3% H₂O₂ on wounds can delay healing by damaging fibroblasts — clean water or saline is often preferred.",
+        "alternatives_txt": "Povidone-iodine or chlorhexidine for wound antisepsis; enzymatic tooth whitening systems.",
+        "source_urls": ["https://pubchem.ncbi.nlm.nih.gov/compound/784"],
+    },
+    {
+        "compound_uuid": "c009",
+        "iupac_name": "citric acid",
+        "common_name": "Citric Acid",
+        "molecular_formula": "C₆H₈O₇",
+        "safety_tier_rating": "Green",
+        "description": "A naturally occurring weak organic acid found in citrus fruits, widely used as a food preservative and flavor enhancer.",
+        "function_txt": "Preservative, flavor enhancer, pH adjuster, chelating agent",
+        "mechanism_of_action_txt": "Lowers pH to inhibit microbial growth; chelates metal ions that catalyze oxidative spoilage.",
+        "misconceptions_txt": "Citric acid in processed foods is primarily produced by Aspergillus niger fermentation, not from citrus fruit extraction.",
+        "alternatives_txt": "Tartaric acid, malic acid for acidification in food and beverages.",
+        "source_urls": ["https://pubchem.ncbi.nlm.nih.gov/compound/311"],
+    },
+    {
+        "compound_uuid": "c010",
+        "iupac_name": "ethanol",
+        "common_name": "Ethyl Alcohol",
+        "molecular_formula": "C₂H₅OH",
+        "safety_tier_rating": "Yellow",
+        "description": "The type of alcohol found in alcoholic beverages, also widely used as a solvent and disinfectant.",
+        "function_txt": "Disinfectant, solvent, recreational/cultural beverage component",
+        "mechanism_of_action_txt": "Denatures proteins and disrupts lipid membranes of bacteria; in humans acts as a CNS depressant via GABA receptor modulation.",
+        "misconceptions_txt": "Ethanol above 60% concentration is required for effective hand sanitization — dilute solutions are far less effective.",
+        "alternatives_txt": "Isopropyl alcohol (70%) for surface disinfection; nonalcoholic beverages.",
+        "source_urls": ["https://pubchem.ncbi.nlm.nih.gov/compound/702"],
+    },
+]
+
+ARTICLES = [
+    {
+        "slug": "what-is-in-your-tap-water",
+        "title": "What's Really In Your Tap Water?",
+        "category": "Water Quality",
+        "reading_level": "Beginner",
+        "last_reviewed_at": "2024-03-01",
+        "compound_ids": ["c001"],
+        "source_log": {"sources": ["EPA", "WHO", "NSF International"]},
+        "content": (
+            "Tap water travels a long journey before it reaches your faucet. Municipal treatment plants filter "
+            "sediment, kill pathogens with chlorine or UV light, and test for over 90 regulated contaminants. "
+            "What you actually drink includes calcium, magnesium, sodium, and trace amounts of chlorine disinfectant. "
+            "In most developed countries, tap water is safer than bottled water and is subject to far stricter "
+            "reporting requirements. The EPA's Safe Drinking Water Act mandates that utilities publish annual "
+            "Consumer Confidence Reports — you can look yours up online. Key things to look for: lead (from old "
+            "pipes), nitrates (from agricultural runoff), and disinfection byproducts like trihalomethanes. "
+            "A simple activated carbon filter handles most of these at a fraction of the cost of bottled water."
+        ),
+    },
+    {
+        "slug": "chemistry-of-cleaning-products",
+        "title": "The Chemistry Behind Everyday Cleaning Products",
+        "category": "Household Chemistry",
+        "reading_level": "Intermediate",
+        "last_reviewed_at": "2024-04-15",
+        "compound_ids": ["c002", "c003"],
+        "source_log": {"sources": ["ACS", "NIH", "Consumer Reports"]},
+        "content": (
+            "Your kitchen cabinet is a chemistry lab. Dish soap works because its molecules have a water-loving "
+            "(hydrophilic) head and an oil-loving (hydrophobic) tail — this structure, called a surfactant, "
+            "physically grabs grease molecules and suspends them in water so they rinse away. White vinegar "
+            "(acetic acid) excels at dissolving mineral deposits like limescale because it reacts with calcium "
+            "carbonate. Baking soda is a mild abrasive and a base that neutralizes acidic odors. Bleach "
+            "(sodium hypochlorite) is a powerful oxidizer that breaks apart the chromophores in stains and "
+            "destroys microbial DNA. Never mix bleach with ammonia (produces toxic chloramine gas) or with "
+            "vinegar (produces chlorine gas). Understanding the chemistry helps you clean more effectively "
+            "with fewer products."
+        ),
+    },
+    {
+        "slug": "sunscreen-science",
+        "title": "How Sunscreen Actually Protects Your Skin",
+        "category": "Personal Care Chemistry",
+        "reading_level": "Intermediate",
+        "last_reviewed_at": "2024-05-10",
+        "compound_ids": ["c006"],
+        "source_log": {"sources": ["FDA", "AAD", "Photochemistry & Photobiology"]},
+        "content": (
+            "Sunscreens work through two mechanisms: physical blockers (mineral filters) and chemical absorbers. "
+            "Zinc oxide and titanium dioxide are mineral filters that sit on skin and physically scatter UV "
+            "photons before they can damage DNA. Chemical filters like avobenzone absorb UV radiation and "
+            "release it as heat. The SPF number tells you how much longer you can stay in the sun before "
+            "UVB-induced redness — SPF 30 blocks ~97% of UVB rays while SPF 50 blocks ~98%. UVA rays (linked "
+            "to aging and melanoma) require broad-spectrum labeling. Controversy exists around oxybenzone "
+            "bioaccumulation and reef impact, which is why Hawaii banned certain chemical filters. For reef "
+            "ecosystems and sensitive skin, mineral formulas with non-nano zinc oxide are the current best practice."
+        ),
+    },
+    {
+        "slug": "endocrine-disruptors-explained",
+        "title": "Endocrine Disruptors: What Are They and Should You Worry?",
+        "category": "Toxicology",
+        "reading_level": "Advanced",
+        "last_reviewed_at": "2024-02-20",
+        "compound_ids": ["c007"],
+        "source_log": {"sources": ["NIH NIEHS", "Endocrine Society", "European Food Safety Authority"]},
+        "content": (
+            "Endocrine disruptors are chemicals that interfere with the body's hormonal system. BPA (bisphenol A) "
+            "is the most studied — it mimics estrogen and has been linked to reproductive issues, metabolic "
+            "disorders, and developmental problems in animal studies. The challenge is that effects occur at "
+            "very low doses and may not follow classical dose-response curves. Phthalates (plasticizers in "
+            "flexible PVC), parabens (preservatives), and PFAS (non-stick coatings) round out the major "
+            "classes of concern. Regulatory bodies are divided: the EU applies the precautionary principle "
+            "aggressively, while the US FDA takes a more wait-for-human-evidence approach. Practical "
+            "reductions: choose glass or stainless for food storage, avoid heating food in plastic, and "
+            "buy fragrance-free personal care products."
+        ),
+    },
+    {
+        "slug": "caffeine-science",
+        "title": "The Science of Caffeine: How Your Morning Coffee Actually Works",
+        "category": "Neuroscience & Chemistry",
+        "reading_level": "Beginner",
+        "last_reviewed_at": "2024-06-01",
+        "compound_ids": ["c005"],
+        "source_log": {"sources": ["PubMed", "Johns Hopkins", "European Journal of Nutrition"]},
+        "content": (
+            "Caffeine is an adenosine receptor antagonist — meaning it blocks the receptors that normally "
+            "receive adenosine, a molecule your brain produces as a byproduct of activity that makes you feel "
+            "tired. By occupying these receptors, caffeine prevents adenosine from binding and delays the "
+            "onset of drowsiness. Caffeine also increases dopamine signaling, which improves mood and motivation. "
+            "The half-life in most adults is 5–6 hours, which is why an afternoon coffee can disrupt sleep. "
+            "Tolerance develops within 1–2 weeks of daily use — you need more to get the same effect. "
+            "Withdrawal symptoms (headache, irritability) peak at 20–51 hours after cessation. The FDA "
+            "considers 400 mg/day (about 4 cups of coffee) safe for healthy adults. Pure powdered caffeine "
+            "is extremely dangerous — just 1/4 teaspoon (1.2g) can be fatal."
+        ),
+    },
+]
+
+PODCASTS = [
+    {
+        "episode_id": "ep001",
+        "title_slug": "water-fluoridation-controversy",
+        "audio_cdn_url": "https://archive.org/download/podcast-placeholder/ep001.mp3",
+        "duration_seconds": 1842,
+        "transcript_url": None,
+        "linked_research_papers": ["https://doi.org/10.1289/EHP655"],
+        "annotations": [
+            {"start_seconds": 0, "end_seconds": 120, "label": "Introduction", "compound_uuid": None},
+            {"start_seconds": 120, "end_seconds": 600, "label": "History of fluoridation", "compound_uuid": None},
+            {"start_seconds": 600, "end_seconds": 1200, "label": "Current evidence review", "compound_uuid": None},
+            {"start_seconds": 1200, "end_seconds": 1842, "label": "Practical takeaways", "compound_uuid": None},
+        ],
+    },
+    {
+        "episode_id": "ep002",
+        "title_slug": "plastics-in-our-food",
+        "audio_cdn_url": "https://archive.org/download/podcast-placeholder/ep002.mp3",
+        "duration_seconds": 2203,
+        "transcript_url": None,
+        "linked_research_papers": ["https://doi.org/10.1016/j.chemosphere.2021.132227"],
+        "annotations": [
+            {"start_seconds": 0, "end_seconds": 90, "label": "Introduction to microplastics", "compound_uuid": "c007"},
+            {"start_seconds": 90, "end_seconds": 900, "label": "How plastics enter food", "compound_uuid": "c007"},
+            {"start_seconds": 900, "end_seconds": 1800, "label": "Health implications", "compound_uuid": "c007"},
+            {"start_seconds": 1800, "end_seconds": 2203, "label": "What you can do", "compound_uuid": None},
+        ],
+    },
+    {
+        "episode_id": "ep003",
+        "title_slug": "vitamin-c-megadosing-myths",
+        "audio_cdn_url": "https://archive.org/download/podcast-placeholder/ep003.mp3",
+        "duration_seconds": 1560,
+        "transcript_url": None,
+        "linked_research_papers": ["https://doi.org/10.1002/14651858.CD000980.pub5"],
+        "annotations": [
+            {"start_seconds": 0, "end_seconds": 180, "label": "Linus Pauling's claims", "compound_uuid": "c004"},
+            {"start_seconds": 180, "end_seconds": 900, "label": "What the meta-analyses show", "compound_uuid": "c004"},
+            {"start_seconds": 900, "end_seconds": 1560, "label": "Optimal dosing evidence", "compound_uuid": "c004"},
+        ],
+    },
+]
+
+METRICS = [
+    {"record_id": 1, "location_bucket": "10001", "metric_type": "pH", "numeric_value": 7.2, "device_calibration_flag": True, "verification_status": "approved"},
+    {"record_id": 2, "location_bucket": "90210", "metric_type": "pH", "numeric_value": 6.8, "device_calibration_flag": False, "verification_status": "approved"},
+    {"record_id": 3, "location_bucket": "60601", "metric_type": "pH", "numeric_value": 7.5, "device_calibration_flag": True, "verification_status": "approved"},
+    {"record_id": 4, "location_bucket": "77001", "metric_type": "pH", "numeric_value": 7.0, "device_calibration_flag": True, "verification_status": "approved"},
+    {"record_id": 5, "location_bucket": "30301", "metric_type": "pH", "numeric_value": 6.5, "device_calibration_flag": False, "verification_status": "approved"},
+    {"record_id": 6, "location_bucket": "98101", "metric_type": "pH", "numeric_value": 7.8, "device_calibration_flag": True, "verification_status": "approved"},
+    {"record_id": 7, "location_bucket": "02101", "metric_type": "pH", "numeric_value": 6.9, "device_calibration_flag": True, "verification_status": "approved"},
+    {"record_id": 8, "location_bucket": "85001", "metric_type": "pH", "numeric_value": 7.3, "device_calibration_flag": False, "verification_status": "approved"},
+]
+
+# In-memory store for user-submitted metrics (resets on cold start — by design for demo)
+_submitted_metrics: list = []
+_next_metric_id: int = 100
+
+# ---------------------------------------------------------------------------
 # Pydantic Schemas
+# ---------------------------------------------------------------------------
 class MetricSubmission(BaseModel):
     location_bucket: str = Field(..., description="Zip code or generalized city region")
-    numeric_value: float = Field(..., ge=0.0, le=14.0, description="pH level of tap-water")
+    numeric_value: float = Field(..., ge=0.0, le=14.0, description="pH level of tap water")
     device_calibration_flag: bool = Field(False, description="Whether the device was calibrated")
 
-class MetricVerifyRequest(BaseModel):
-    record_id: int
-    action: str = Field(..., description="approve or reject")
-
 class ProductParseRequest(BaseModel):
-    ingredients_text: str = Field(..., description="Raw text of ingredients separated by commas")
+    ingredients_text: str = Field(..., description="Raw ingredient list, comma-separated")
 
-# Helper to load JSON strings safely
-def safe_json_loads(val, default=None):
-    if not val:
-        return default or []
-    try:
-        return json.loads(val)
-    except:
-        return default or []
-
+# ---------------------------------------------------------------------------
+# Endpoints
+# ---------------------------------------------------------------------------
 @app.get("/api/health")
 def health_check():
-    return {"status": "ok", "message": "Everyday Chemistry API is fully operational"}
+    return {"status": "ok", "message": "Everyday Chemistry API is fully operational", "mode": "static-data"}
 
-# 1. Unified Search Endpoint
+
 @app.get("/api/search")
-def unified_search(q: str = Query("", min_length=0), db: Session = Depends(get_db)):
-    if not q:
-        # Return a default set of featured chemicals and articles
-        compounds = db.query(ChemicalCompound).limit(10).all()
-        articles = db.query(Article).limit(5).all()
-        podcasts = db.query(PodcastTrack).all()
+def unified_search(q: str = Query("", min_length=0)):
+    q_lower = q.lower().strip()
+    if not q_lower:
+        compounds = COMPOUNDS[:8]
+        articles = ARTICLES[:4]
+        podcasts = PODCASTS
     else:
-        q_like = f"%{q}%"
-        compounds = db.query(ChemicalCompound).filter(
-            (ChemicalCompound.common_name.like(q_like)) | 
-            (ChemicalCompound.iupac_name.like(q_like)) | 
-            (ChemicalCompound.molecular_formula.like(q_like))
-        ).limit(20).all()
-        
-        articles = db.query(Article).filter(
-            (Article.title.like(q_like)) | 
-            (Article.content.like(q_like)) | 
-            (Article.category.like(q_like))
-        ).limit(10).all()
-        
-        podcasts = db.query(PodcastTrack).filter(
-            (PodcastTrack.title_slug.like(q_like))
-        ).all()
-        
+        compounds = [
+            c for c in COMPOUNDS
+            if q_lower in c["common_name"].lower()
+            or q_lower in (c["iupac_name"] or "").lower()
+            or q_lower in (c["molecular_formula"] or "").lower()
+            or q_lower in (c["description"] or "").lower()
+        ]
+        articles = [
+            a for a in ARTICLES
+            if q_lower in a["title"].lower()
+            or q_lower in a["category"].lower()
+            or q_lower in a["content"].lower()
+        ]
+        podcasts = [
+            p for p in PODCASTS
+            if q_lower in p["title_slug"].replace("-", " ")
+        ]
+
     return {
         "compounds": [
-            {
-                "compound_uuid": c.compound_uuid,
-                "common_name": c.common_name,
-                "iupac_name": c.iupac_name,
-                "molecular_formula": c.molecular_formula,
-                "safety_tier_rating": c.safety_tier_rating,
-                "description": c.description,
-                "function_txt": c.function_txt
-            } for c in compounds
+            {k: c[k] for k in ("compound_uuid", "common_name", "iupac_name", "molecular_formula", "safety_tier_rating", "description", "function_txt")}
+            for c in compounds
         ],
         "articles": [
-            {
-                "slug": a.slug,
-                "title": a.title,
-                "category": a.category,
-                "reading_level": a.reading_level,
-                "last_reviewed_at": a.last_reviewed_at
-            } for a in articles
+            {k: a[k] for k in ("slug", "title", "category", "reading_level", "last_reviewed_at")}
+            for a in articles
         ],
         "podcasts": [
-            {
-                "episode_id": p.episode_id,
-                "title_slug": p.title_slug,
-                "duration_seconds": p.duration_seconds
-            } for p in podcasts
-        ]
+            {k: p[k] for k in ("episode_id", "title_slug", "duration_seconds")}
+            for p in podcasts
+        ],
     }
 
-# 2. Get Compound by ID
+
+@app.get("/api/compounds")
+def list_compounds():
+    return [
+        {k: c[k] for k in ("compound_uuid", "common_name", "iupac_name", "molecular_formula", "safety_tier_rating")}
+        for c in COMPOUNDS
+    ]
+
+
 @app.get("/api/compounds/{compound_id}")
-def get_compound(compound_id: str, db: Session = Depends(get_db)):
-    compound = db.query(ChemicalCompound).filter(ChemicalCompound.compound_uuid == compound_id).first()
+def get_compound(compound_id: str):
+    compound = next((c for c in COMPOUNDS if c["compound_uuid"] == compound_id), None)
     if not compound:
         raise HTTPException(status_code=404, detail="Chemical compound not found")
-    
-    return {
-        "compound_uuid": compound.compound_uuid,
-        "common_name": compound.common_name,
-        "iupac_name": compound.iupac_name,
-        "molecular_formula": compound.molecular_formula,
-        "safety_tier_rating": compound.safety_tier_rating,
-        "mechanism_of_action_txt": compound.mechanism_of_action_txt,
-        "description": compound.description,
-        "function_txt": compound.function_txt,
-        "misconceptions_txt": compound.misconceptions_txt,
-        "alternatives_txt": compound.alternatives_txt,
-        "source_urls": safe_json_loads(compound.source_urls, ["https://pubchem.ncbi.nlm.nih.gov"])
-    }
+    return compound
 
-# List all compounds (for directory views)
-@app.get("/api/compounds")
-def list_compounds(db: Session = Depends(get_db)):
-    compounds = db.query(ChemicalCompound).all()
-    return [
-        {
-            "compound_uuid": c.compound_uuid,
-            "common_name": c.common_name,
-            "iupac_name": c.iupac_name,
-            "molecular_formula": c.molecular_formula,
-            "safety_tier_rating": c.safety_tier_rating
-        } for c in compounds
-    ]
 
-# 3. Product Ingredient Paste Parser
 @app.post("/api/products/parse")
-def parse_ingredients(payload: ProductParseRequest, db: Session = Depends(get_db)):
+def parse_ingredients(payload: ProductParseRequest):
     raw_text = payload.ingredients_text
-    # Tokenize ingredients
-    # Replace common leading descriptions and punctuation, split by comma or semicolon
-    clean_text = raw_text.replace("Active Ingredients:", "").replace("Ingredients:", "").replace(".", "")
+    clean_text = (
+        raw_text
+        .replace("Active Ingredients:", "")
+        .replace("Ingredients:", "")
+        .replace(".", "")
+    )
     raw_tokens = [tok.strip() for tok in clean_text.split(",") if tok.strip()]
     if not raw_tokens:
-        # Check if semicolon split is better
         raw_tokens = [tok.strip() for tok in clean_text.split(";") if tok.strip()]
 
-    parsed_ingredients = []
-    green_count = 0
-    yellow_count = 0
-    red_count = 0
-    
-    # Retrieve all chemicals for matching in-memory to speed up parsing
-    all_compounds = db.query(ChemicalCompound).all()
-    
-    for idx, token in enumerate(raw_tokens):
-        # Perform normalization for match
-        # Try to find an exact or fuzzy match
-        matched_comp = None
-        best_confidence = 0.0
-        
+    parsed = []
+    green = yellow = red = 0
+
+    for token in raw_tokens:
         token_clean = token.lower().strip()
-        
-        # Simple heuristics for parsing
-        # Remove parenthetical details, e.g. "Water (Aqua)" -> "Water"
         if "(" in token_clean:
             token_clean = token_clean.split("(")[0].strip()
-        
-        for comp in all_compounds:
-            comp_name = comp.common_name.lower()
-            comp_iupac = comp.iupac_name.lower() if comp.iupac_name else ""
-            comp_uuid = comp.compound_uuid.lower()
-            
-            # Exact matches
-            if token_clean == comp_name or token_clean == comp_iupac or token_clean == comp_uuid:
-                matched_comp = comp
-                best_confidence = 1.0
-                break
-            # Substring alias matching
-            elif token_clean in comp_name or comp_name in token_clean:
-                matched_comp = comp
-                best_confidence = 0.85
-            elif comp_iupac and (token_clean in comp_iupac or comp_iupac in token_clean):
-                matched_comp = comp
-                best_confidence = 0.80
 
-        if matched_comp:
-            # Score categorization
-            rating = matched_comp.safety_tier_rating
-            if rating == "Green":
-                green_count += 1
-            elif rating == "Yellow":
-                yellow_count += 1
-            elif rating == "Red":
-                red_count += 1
-                
-            parsed_ingredients.append({
-                "original_text": token,
-                "matched": True,
-                "confidence_score": best_confidence,
-                "compound_uuid": matched_comp.compound_uuid,
-                "common_name": matched_comp.common_name,
-                "molecular_formula": matched_comp.molecular_formula,
-                "safety_tier_rating": matched_comp.safety_tier_rating,
-                "function_txt": matched_comp.function_txt,
-                "description": matched_comp.description
+        matched = None
+        confidence = 0.0
+
+        for c in COMPOUNDS:
+            name = c["common_name"].lower()
+            iupac = (c["iupac_name"] or "").lower()
+            if token_clean == name or token_clean == iupac:
+                matched = c; confidence = 1.0; break
+            elif token_clean in name or name in token_clean:
+                matched = c; confidence = 0.85
+            elif iupac and (token_clean in iupac or iupac in token_clean):
+                matched = c; confidence = 0.80
+
+        # Special-case water
+        if not matched and ("water" in token_clean or "aqua" in token_clean):
+            green += 1
+            parsed.append({
+                "original_text": token, "matched": True, "confidence_score": 0.90,
+                "compound_uuid": "water", "common_name": "Water", "molecular_formula": "H₂O",
+                "safety_tier_rating": "Green", "function_txt": "Solvent",
+                "description": "Universal solvent; the most abundant ingredient in most personal care products.",
+            })
+            continue
+
+        if matched:
+            rating = matched["safety_tier_rating"]
+            if rating == "Green": green += 1
+            elif rating == "Yellow": yellow += 1
+            else: red += 1
+            parsed.append({
+                "original_text": token, "matched": True, "confidence_score": confidence,
+                **{k: matched[k] for k in ("compound_uuid", "common_name", "molecular_formula", "safety_tier_rating", "function_txt", "description")},
             })
         else:
-            # Check for common water, fragrance, or flavor terms
-            if "water" in token_clean or "aqua" in token_clean:
-                # Fallback to water
-                water_comp = next((c for c in all_compounds if c.compound_uuid == "water"), None)
-                if water_comp:
-                    green_count += 1
-                    parsed_ingredients.append({
-                        "original_text": token,
-                        "matched": True,
-                        "confidence_score": 0.90,
-                        "compound_uuid": "water",
-                        "common_name": "Water",
-                        "molecular_formula": "H2O",
-                        "safety_tier_rating": "Green",
-                        "function_txt": "Solvent",
-                        "description": water_comp.description
-                    })
-                    continue
-            
-            # Unmatched ingredient
-            parsed_ingredients.append({
-                "original_text": token,
-                "matched": False,
-                "confidence_score": 0.0,
-                "compound_uuid": None,
-                "common_name": token.title(),
-                "molecular_formula": "N/A",
-                "safety_tier_rating": "Yellow",  # Treat unknown as precautionary yellow
+            yellow += 1
+            parsed.append({
+                "original_text": token, "matched": False, "confidence_score": 0.0,
+                "compound_uuid": None, "common_name": token.title(),
+                "molecular_formula": "N/A", "safety_tier_rating": "Yellow",
                 "function_txt": "Unknown Ingredient",
-                "description": "This term did not match any standard chemical compound in our Everyday Chemistry database."
+                "description": "This ingredient did not match any compound in our database.",
             })
-            yellow_count += 1
 
-    # Aggregate safety score calculations
-    # Start at 100, deduct 10 for Yellow, 25 for Red
-    base_score = 100.0 - (yellow_count * 10.0) - (red_count * 25.0)
-    aggregate_score = max(0.0, min(100.0, base_score))
-    
-    # Generate a mockup UUID for the parsed product
-    product_uuid = f"parsed_{uuid.uuid4().hex[:8]}"
+    aggregate_score = max(0.0, min(100.0, 100.0 - yellow * 10.0 - red * 25.0))
 
     return {
-        "product_uuid": product_uuid,
-        "ingredients": parsed_ingredients,
+        "product_uuid": f"parsed_{uuid.uuid4().hex[:8]}",
+        "ingredients": parsed,
         "safety_score_aggregate": aggregate_score,
         "ingredient_count": len(raw_tokens),
-        "breakdown": {
-            "green": green_count,
-            "yellow": yellow_count,
-            "red": red_count
-        }
+        "breakdown": {"green": green, "yellow": yellow, "red": red},
     }
 
-# 4. Citizen Map - Get Public Map Data
-@app.get("/api/metrics/map")
-def get_map_metrics(db: Session = Depends(get_db)):
-    # Only return approved metrics to the public map
-    metrics = db.query(CitizenMetric).filter(CitizenMetric.verification_status == "approved").all()
-    return [
-        {
-            "record_id": m.record_id,
-            "location_bucket": m.location_bucket,
-            "metric_type": m.metric_type,
-            "numeric_value": m.numeric_value,
-            "device_calibration_flag": m.device_calibration_flag
-        } for m in metrics
-    ]
 
-# 5. Citizen Map - Submit Metric
+@app.get("/api/metrics/map")
+def get_map_metrics():
+    approved = [m for m in METRICS + _submitted_metrics if m["verification_status"] == "approved"]
+    return [{k: m[k] for k in ("record_id", "location_bucket", "metric_type", "numeric_value", "device_calibration_flag")} for m in approved]
+
+
 @app.post("/api/metrics")
-def submit_metric(payload: MetricSubmission, db: Session = Depends(get_db)):
-    # Validate location bucket is not empty
+def submit_metric(payload: MetricSubmission):
+    global _next_metric_id
     loc = payload.location_bucket.strip()
     if not loc:
         raise HTTPException(status_code=400, detail="Location bucket is required")
-        
-    # Anomaly Detection: pH must be 0-14. 
-    # Outlier rules: Tap water typically is between pH 6.0 and 8.5. 
-    # If the reading is < 5.5 or > 9.0, or if calibration is false, it goes to verification_pending.
-    # If it is extremely out of bounds (< 4.0 or > 10.0), it is marked as pending.
-    val = payload.numeric_value
-    
-    status = "approved"
-    # Mark as pending if it's an outlier or not calibrated
-    if val < 5.5 or val > 9.0 or not payload.device_calibration_flag:
-        status = "pending"
-        
-    # Create user identity hash to prevent duplicates and protect privacy
-    dummy_ip = "127.0.0.1" # Mock client IP
-    user_hash = hashlib.sha256(dummy_ip.encode('utf-8')).hexdigest()[:12]
-    
-    new_metric = CitizenMetric(
-        user_identity_hash=user_hash,
-        location_bucket=loc,
-        metric_type="pH",
-        numeric_value=val,
-        device_calibration_flag=payload.device_calibration_flag,
-        verification_status=status
-    )
-    
-    db.add(new_metric)
-    db.commit()
-    db.refresh(new_metric)
-    
-    return {
-        "status": "success",
-        "record_id": new_metric.record_id,
-        "verification_status": new_metric.verification_status,
-        "message": "Measurement submitted successfully." if status == "approved" else "Measurement flagged for validation review due to reading variance or calibration status."
+    new = {
+        "record_id": _next_metric_id,
+        "location_bucket": loc,
+        "metric_type": "pH",
+        "numeric_value": payload.numeric_value,
+        "device_calibration_flag": payload.device_calibration_flag,
+        "verification_status": "pending",
     }
+    _submitted_metrics.append(new)
+    _next_metric_id += 1
+    return {"status": "submitted", "record_id": new["record_id"], "message": "Your reading is pending community review."}
 
-# 6. Admin - Get Pending Metrics
-@app.get("/api/metrics/pending")
-def get_pending_metrics(db: Session = Depends(get_db)):
-    pending = db.query(CitizenMetric).filter(CitizenMetric.verification_status == "pending").all()
-    return [
-        {
-            "record_id": p.record_id,
-            "location_bucket": p.location_bucket,
-            "metric_type": p.metric_type,
-            "numeric_value": p.numeric_value,
-            "device_calibration_flag": p.device_calibration_flag,
-            "verification_status": p.verification_status
-        } for p in pending
-    ]
 
-# 7. Admin - Verify Metric (Approve / Reject)
-@app.post("/api/metrics/verify")
-def verify_metric(payload: MetricVerifyRequest, db: Session = Depends(get_db)):
-    metric = db.query(CitizenMetric).filter(CitizenMetric.record_id == payload.record_id).first()
-    if not metric:
-        raise HTTPException(status_code=404, detail="Measurement record not found")
-        
-    if payload.action == "approve":
-        metric.verification_status = "approved"
-    elif payload.action == "reject":
-        metric.verification_status = "rejected"
-    else:
-        raise HTTPException(status_code=400, detail="Invalid verification action. Must be 'approve' or 'reject'.")
-        
-    db.commit()
-    return {"status": "success", "record_id": metric.record_id, "new_status": metric.verification_status}
-
-# 8. Podcast Track & Synced Annotations Endpoint
-@app.get("/api/podcast/{episode_id}")
-def get_podcast_episode(episode_id: str, db: Session = Depends(get_db)):
-    track = db.query(PodcastTrack).filter(PodcastTrack.episode_id == episode_id).first()
-    if not track:
-        raise HTTPException(status_code=404, detail="Podcast episode not found")
-        
-    # Query timed annotations for this episode
-    annotations = db.query(TimedAnnotation).filter(TimedAnnotation.episode_id == episode_id).order_by(TimedAnnotation.start_seconds).all()
-    
-    parsed_annotations = []
-    for ann in annotations:
-        comp_info = None
-        if ann.compound_uuid:
-            comp = db.query(ChemicalCompound).filter(ChemicalCompound.compound_uuid == ann.compound_uuid).first()
-            if comp:
-                comp_info = {
-                    "compound_uuid": comp.compound_uuid,
-                    "common_name": comp.common_name,
-                    "molecular_formula": comp.molecular_formula,
-                    "safety_tier_rating": comp.safety_tier_rating
-                }
-                
-        parsed_annotations.append({
-            "id": ann.id,
-            "start_seconds": ann.start_seconds,
-            "end_seconds": ann.end_seconds,
-            "compound": comp_info,
-            "annotation": safe_json_loads(ann.annotation_json, {})
-        })
-        
-    # Construct a mock transcript for player display
-    # Generate sentences from annotations
-    transcript_segments = []
-    for ann in parsed_annotations:
-        text = ann["annotation"].get("body", "")
-        transcript_segments.append({
-            "start_seconds": ann["start_seconds"],
-            "end_seconds": ann["end_seconds"],
-            "text": text
-        })
-
-    return {
-        "episode_id": track.episode_id,
-        "title_slug": track.title_slug,
-        "audio_cdn_url": track.audio_cdn_url,
-        "duration_seconds": track.duration_seconds,
-        "linked_research_papers": safe_json_loads(track.linked_research_papers, []),
-        "annotations": parsed_annotations,
-        "transcript": transcript_segments
-    }
-
-# 9. List Articles
 @app.get("/api/articles")
-def list_articles(db: Session = Depends(get_db)):
-    articles = db.query(Article).all()
-    return [
-        {
-            "slug": a.slug,
-            "title": a.title,
-            "category": a.category,
-            "reading_level": a.reading_level,
-            "last_reviewed_at": a.last_reviewed_at,
-            "compound_ids": safe_json_loads(a.compound_ids, [])
-        } for a in articles
-    ]
+def list_articles():
+    return [{k: a[k] for k in ("slug", "title", "category", "reading_level", "last_reviewed_at")} for a in ARTICLES]
 
-# 10. Get Article by Slug
+
 @app.get("/api/articles/{slug}")
-def get_article(slug: str, db: Session = Depends(get_db)):
-    article = db.query(Article).filter(Article.slug == slug).first()
+def get_article(slug: str):
+    article = next((a for a in ARTICLES if a["slug"] == slug), None)
     if not article:
         raise HTTPException(status_code=404, detail="Article not found")
-        
-    # Get associated compound cards
-    compound_uuids = safe_json_loads(article.compound_ids, [])
-    compounds = db.query(ChemicalCompound).filter(ChemicalCompound.compound_uuid.in_(compound_uuids)).all()
-    
-    return {
-        "slug": article.slug,
-        "title": article.title,
-        "category": article.category,
-        "reading_level": article.reading_level,
-        "source_log": safe_json_loads(article.source_log_json, {}),
-        "last_reviewed_at": article.last_reviewed_at,
-        "content": article.content,
-        "compounds": [
-            {
-                "compound_uuid": c.compound_uuid,
-                "common_name": c.common_name,
-                "molecular_formula": c.molecular_formula,
-                "safety_tier_rating": c.safety_tier_rating,
-                "function_txt": c.function_txt
-            } for c in compounds
-        ]
-    }
+    compounds = [
+        {k: c[k] for k in ("compound_uuid", "common_name", "molecular_formula", "safety_tier_rating", "function_txt")}
+        for c in COMPOUNDS if c["compound_uuid"] in article.get("compound_ids", [])
+    ]
+    return {**article, "compounds": compounds}
 
 
-# ---------------------------------------------------------------------------
-# Bootstrap helper – seeds a handful of rows so the UI isn't blank on Vercel
-# ---------------------------------------------------------------------------
-def _seed_if_empty():
-    from sqlalchemy.orm import Session as S
-    db = next(get_db())
-    try:
-        if db.query(ChemicalCompound).count() > 0:
-            return  # already seeded
-
-        compounds = [
-            ChemicalCompound(
-                compound_uuid=str(uuid.uuid4()),
-                iupac_name="sodium chloride",
-                common_name="Table Salt",
-                molecular_formula="NaCl",
-                safety_tier_rating="Green",
-                description="Common table salt, an ionic compound of sodium and chlorine.",
-                function_txt="Flavoring, preservative, electrolyte",
-                mechanism_of_action_txt="Osmotic balance regulation; essential electrolyte",
-                misconceptions_txt="Salt alone does not cause hypertension in everyone",
-                alternatives_txt="Potassium chloride (KCl) as low-sodium substitute",
-                source_urls='["https://pubchem.ncbi.nlm.nih.gov/compound/5234"]',
-            ),
-            ChemicalCompound(
-                compound_uuid=str(uuid.uuid4()),
-                iupac_name="acetic acid",
-                common_name="Vinegar (Acetic Acid)",
-                molecular_formula="CH3COOH",
-                safety_tier_rating="Green",
-                description="The main component of vinegar, a weak organic acid.",
-                function_txt="Preservative, cleaning agent, flavor enhancer",
-                mechanism_of_action_txt="Weak acid that lowers pH; antimicrobial at concentrations >5%",
-                misconceptions_txt="Vinegar is NOT a disinfectant for pathogens like Salmonella",
-                alternatives_txt="Citric acid for similar acidic cleaning applications",
-                source_urls='["https://pubchem.ncbi.nlm.nih.gov/compound/176"]',
-            ),
-            ChemicalCompound(
-                compound_uuid=str(uuid.uuid4()),
-                iupac_name="sodium lauryl sulfate",
-                common_name="SLS (Sodium Lauryl Sulfate)",
-                molecular_formula="C12H25NaO4S",
-                safety_tier_rating="Yellow",
-                description="A surfactant and detergent found in many personal care products.",
-                function_txt="Surfactant, foaming agent",
-                mechanism_of_action_txt="Disrupts lipid bilayers; reduces surface tension",
-                misconceptions_txt="SLS is not a carcinogen despite online claims",
-                alternatives_txt="Sodium laureth sulfate (SLES), coco-glucoside",
-                source_urls='["https://pubchem.ncbi.nlm.nih.gov/compound/3423265"]',
-            ),
-        ]
-        db.add_all(compounds)
-
-        articles = [
-            Article(
-                slug="what-is-in-your-tap-water",
-                title="What's Really In Your Tap Water?",
-                category="Water Quality",
-                reading_level="Beginner",
-                content="Tap water contains minerals, disinfectants like chlorine, and trace elements. Most municipal water is safe to drink and rigorously tested.",
-                last_reviewed_at="2024-01-01",
-                source_log_json='{"sources": ["EPA", "WHO"]}',
-                compound_ids='[]',
-            ),
-            Article(
-                slug="chemistry-of-cleaning-products",
-                title="The Chemistry Behind Everyday Cleaning Products",
-                category="Household Chemistry",
-                reading_level="Intermediate",
-                content="Cleaning products rely on surfactants, oxidizers, and acids/bases to break down grime. Understanding them helps you use them safely.",
-                last_reviewed_at="2024-03-15",
-                source_log_json='{"sources": ["ACS", "NIH"]}',
-                compound_ids='[]',
-            ),
-        ]
-        db.add_all(articles)
-        db.commit()
-    except Exception:
-        db.rollback()
-    finally:
-        db.close()
+@app.get("/api/podcasts")
+def list_podcasts():
+    return [{k: p[k] for k in ("episode_id", "title_slug", "duration_seconds", "linked_research_papers")} for p in PODCASTS]
 
 
-# Vercel / AWS Lambda ASGI bridge
-try:
-    from mangum import Mangum
-    handler = Mangum(app, lifespan="off")
-except ImportError:
-    pass  # mangum optional; Vercel also supports ASGI apps natively
+@app.get("/api/podcasts/{episode_id}")
+def get_podcast(episode_id: str):
+    podcast = next((p for p in PODCASTS if p["episode_id"] == episode_id), None)
+    if not podcast:
+        raise HTTPException(status_code=404, detail="Episode not found")
+    return podcast
