@@ -7,9 +7,13 @@ import Articles from './components/Articles';
 import PodcastHub from './components/PodcastHub';
 import CitizenMap from './components/CitizenMap';
 import AdminDashboard from './components/AdminDashboard';
+import CdiscValidator from './components/CdiscValidator';
+import BiotechResources from './components/BiotechResources';
+import LandingPage from './components/LandingPage';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<string>('explore');
+  const [activeTab, setActiveTab] = useState<string>('home');
+  const [userEmail, setUserEmail] = useState<string | null>(null);
   const [initialSearchId, setInitialSearchId] = useState<string | null>(null);
   const [pendingCount, setPendingCount] = useState<number>(0);
 
@@ -64,13 +68,35 @@ export default function App() {
             pendingCount={pendingCount} 
           />
         );
+      case 'cdisc-validator':
+        return <CdiscValidator />;
+      case 'biotech-resources':
+        return <BiotechResources />;
       default:
-        return <XRayHouse onSearchCompound={handleSearchCompound} />;
+        return <ProductAnalyzer onSearchCompound={handleSearchCompound} />;
     }
   };
 
+  if (activeTab === 'home') {
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col justify-center px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <LandingPage 
+          onEnter={(email) => {
+            setUserEmail(email);
+            setActiveTab('products');
+          }} 
+        />
+      </div>
+    );
+  }
+
   return (
-    <Layout activeTab={activeTab} setActiveTab={setActiveTab} pendingCount={pendingCount}>
+    <Layout 
+      activeTab={activeTab} 
+      setActiveTab={setActiveTab} 
+      pendingCount={pendingCount}
+      userEmail={userEmail}
+    >
       {renderContent()}
     </Layout>
   );
