@@ -10,6 +10,8 @@ import AdminDashboard from './components/AdminDashboard';
 import CdiscValidator from './components/CdiscValidator';
 import BiotechResources from './components/BiotechResources';
 import LandingPage from './components/LandingPage';
+import BioPage from './components/BioPage';
+import CurieChatbot from './components/CurieChatbot';
 
 export default function App() {
   const [userEmail, setUserEmail] = useState<string | null>(() => localStorage.getItem('userEmail'));
@@ -72,6 +74,8 @@ export default function App() {
         return <CdiscValidator />;
       case 'biotech-resources':
         return <BiotechResources />;
+      case 'bio':
+        return <BioPage />;
       default:
         return <ProductAnalyzer onSearchCompound={handleSearchCompound} />;
     }
@@ -80,25 +84,29 @@ export default function App() {
   if (activeTab === 'home') {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col justify-center px-4 sm:px-6 lg:px-8 overflow-hidden">
-        <LandingPage
+        <LandingPage 
           onEnter={(email) => {
             localStorage.setItem('userEmail', email);
             setUserEmail(email);
             setActiveTab('products');
           }}
         />
+        <CurieChatbot />
       </div>
     );
   }
 
   return (
-    <Layout
-      activeTab={activeTab}
-      setActiveTab={setActiveTab}
-      pendingCount={pendingCount}
-      userEmail={userEmail}
-    >
-      {renderContent()}
-    </Layout>
+    <>
+      <Layout
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        pendingCount={pendingCount}
+        userEmail={userEmail}
+      >
+        {renderContent()}
+      </Layout>
+      <CurieChatbot />
+    </>
   );
 }

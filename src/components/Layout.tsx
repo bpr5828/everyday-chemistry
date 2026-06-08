@@ -8,10 +8,11 @@ import {
   MapPin, 
   ShieldAlert,
   Database,
-  FlaskConical,
-  GraduationCap,
   Activity,
-  BookOpen
+  BookOpen,
+  User,
+  FlaskConical,
+  GraduationCap
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -31,6 +32,10 @@ export default function Layout({ children, activeTab, setActiveTab, pendingCount
   const theme2Items = [
     { id: 'cdisc-validator', label: 'CDISC Validator', icon: Activity, desc: 'Data quality checks' },
     { id: 'biotech-resources', label: 'Biotech Resources', icon: BookOpen, desc: 'Databases & learning' },
+  ];
+
+  const creatorItems = [
+    { id: 'bio', label: 'Creator Bio', icon: User, desc: 'Developer Journey & Chemo' },
   ];
 
   const adminItem = { id: 'admin', label: 'Admin Moderation', icon: ShieldAlert, desc: 'Verify community data', badge: pendingCount > 0 ? pendingCount : undefined };
@@ -96,7 +101,8 @@ export default function Layout({ children, activeTab, setActiveTab, pendingCount
           <nav>
             {renderNavGroup('Product & Consumer Lab', theme1Items)}
             {renderNavGroup('Clinical Trials & Biotech', theme2Items)}
-            {renderNavGroup('Utilities', [adminItem])}
+            {renderNavGroup('Creator', creatorItems)}
+            {userEmail === 'admin@gmail.com' && renderNavGroup('Utilities', [adminItem])}
           </nav>
         </div>
 
