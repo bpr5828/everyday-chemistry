@@ -63,9 +63,9 @@ export default function LandingPage({ onEnter }: LandingPageProps) {
       if (webhookUrl) {
         await fetch(webhookUrl, {
           method: 'POST',
-          mode: 'no-cors', 
+          redirect: 'follow',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'text/plain;charset=utf-8',
           },
           body: JSON.stringify({ email, ackStatus: 'Yes', timestamp: new Date().toISOString() }),
         });

@@ -12,8 +12,8 @@ import BiotechResources from './components/BiotechResources';
 import LandingPage from './components/LandingPage';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<string>('home');
-  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(() => localStorage.getItem('userEmail'));
+  const [activeTab, setActiveTab] = useState<string>(() => localStorage.getItem('userEmail') ? 'products' : 'home');
   const [initialSearchId, setInitialSearchId] = useState<string | null>(null);
   const [pendingCount, setPendingCount] = useState<number>(0);
 
@@ -48,9 +48,9 @@ export default function App() {
         return <XRayHouse onSearchCompound={handleSearchCompound} />;
       case 'de-jargonizer':
         return (
-          <DeJargonizer 
-            initialSearchId={initialSearchId} 
-            clearInitialSearch={() => setInitialSearchId(null)} 
+          <DeJargonizer
+            initialSearchId={initialSearchId}
+            clearInitialSearch={() => setInitialSearchId(null)}
           />
         );
       case 'products':
@@ -63,9 +63,9 @@ export default function App() {
         return <CitizenMap onSubmissionSuccess={fetchPendingCount} />;
       case 'admin':
         return (
-          <AdminDashboard 
-            onVerificationUpdate={fetchPendingCount} 
-            pendingCount={pendingCount} 
+          <AdminDashboard
+            onVerificationUpdate={fetchPendingCount}
+            pendingCount={pendingCount}
           />
         );
       case 'cdisc-validator':
@@ -80,20 +80,21 @@ export default function App() {
   if (activeTab === 'home') {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col justify-center px-4 sm:px-6 lg:px-8 overflow-hidden">
-        <LandingPage 
+        <LandingPage
           onEnter={(email) => {
+            localStorage.setItem('userEmail', email);
             setUserEmail(email);
             setActiveTab('products');
-          }} 
+          }}
         />
       </div>
     );
   }
 
   return (
-    <Layout 
-      activeTab={activeTab} 
-      setActiveTab={setActiveTab} 
+    <Layout
+      activeTab={activeTab}
+      setActiveTab={setActiveTab}
       pendingCount={pendingCount}
       userEmail={userEmail}
     >
