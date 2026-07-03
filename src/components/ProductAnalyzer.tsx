@@ -76,12 +76,6 @@ export default function ProductAnalyzer({ onSearchCompound }: ProductAnalyzerPro
 
   const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
-  // Engine state (webgpu shader vs local LLM)
-  const [engineType, setEngineType] = useState<'webgpu' | 'local-llm'>('webgpu');
-  const [ollamaUrl, setOllamaUrl] = useState<string>('http://localhost:11434');
-  const [selectedModel, setSelectedModel] = useState<string>('gemma4:e4b');
-  const [installedModels, setInstalledModels] = useState<string[]>([]);
-  const [ollamaConnected, setOllamaConnected] = useState<boolean>(false);
   const [llmProgressLog, setLlmProgressLog] = useState<string[]>([]);
   const [llmError, setLlmError] = useState<string | null>(null);
 
@@ -139,31 +133,6 @@ export default function ProductAnalyzer({ onSearchCompound }: ProductAnalyzerPro
       console.error(e);
     }
   }, []);
-
-  const fetchOllamaModels = async (url: string) => {
-    try {
-      const response = await fetch(`${url}/api/tags`);
-      if (response.ok) {
-        const data = await response.json();
-        const models = data.models?.map((m: any) => m.name) || [];
-        setInstalledModels(models);
-        setOllamaConnected(true);
-        if (models.length > 0 && !models.includes(selectedModel)) {
-          setSelectedModel(models[0]);
-        }
-      } else {
-        setOllamaConnected(false);
-      }
-    } catch (e) {
-      setOllamaConnected(false);
-    }
-  };
-
-  useEffect(() => {
-    if (engineType === 'local-llm') {
-      fetchOllamaModels(ollamaUrl);
-    }
-  }, [engineType, ollamaUrl]);
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -274,13 +243,65 @@ export default function ProductAnalyzer({ onSearchCompound }: ProductAnalyzerPro
     }
   };
 
-  const runLocalLlmAnalysis = async (text: string): Promise<ParseResponse> => {
-    setLlmProgressLog(["Initializing local AI connection..."]);
+  const runInBrowserLlm = async (text: string, onProgress: (stepText: string) => void): Promise<ParseResponse> => {
+    onProgress("Checking for Chrome Built-in AI...");
+    
+    if (typeof (window as any).ai !== 'undefined' && typeof (window as any).ai.languageModel !== 'undefined') {
+      try {
+        onProgress("Gemini Nano detected. Initializing local session...");
+        const ai = (window as any).ai;
+        const capabilities = await ai.languageModel.capabilities();
+        if (capabilities.available !== 'no') {
+          const session = await ai.languageModel.create();
+          onProgress("Querying local Gemini Nano model...");
+          const sysPrompt = "You are a chemical safety analysis expert. Respond ONLY with a valid JSON object matching the requested schema. Do not output conversational text or markdown code blocks.";
+          const userPrompt = `Analyze the safety of these ingredients: "${text}". Take this health profile into account for warning matches: "${healthConditions}".
+          Return a JSON object containing an "ingredients" key, which holds an array of ingredient objects:
+          {
+            "ingredients": [
+              {
+                "common_name": "Ingredient Name",
+                "molecular_formula": "Formula",
+                "safety_tier_rating": "Green" | "Yellow" | "Red",
+                "function_txt": "Function",
+                "description": "Short explanation",
+                "when_to_use": ["condition"],
+                "when_not_to_use": ["condition"]
+              }
+            ]
+          }`;
+          const rawResponse = await session.prompt(`${sysPrompt}\n\n${userPrompt}`);
+          session.destroy();
+          
+          let cleaned = rawResponse.trim();
+          if (cleaned.startsWith("```")) {
+            cleaned = cleaned.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
+          }
+          
+          const parsed = JSON.parse(cleaned);
+          if (parsed && parsed.ingredients) {
+            onProgress("Gemini Nano analysis complete!");
+            return formatLlmParsedResponse(parsed, "Chrome Built-in AI (Gemini Nano via GPU)");
+          }
+        }
+      } catch (err) {
+        console.warn("Chrome built-in AI session failed, falling back to WebLLM SmollM...", err);
+      }
+    }
+
+    onProgress("Initializing local WebLLM SmollM (runs on WebGPU in browser)...");
     
     try {
-      setLlmProgressLog(prev => [...prev, `Preparing payload for model: "${selectedModel}"...`]);
+      const { CreateMLCEngine } = await import('@mlc-ai/web-llm');
       
-      const sysContent = `You are a chemical safety analysis expert. Respond ONLY with a valid JSON object matching the requested schema. Do not output conversational text or markdown code blocks (such as \`\`\`json).`;
+      const newEngine = await CreateMLCEngine("SmolLM-135M-Instruct-v0.2-q4f16_1-MLC", {
+        initProgressCallback: (report) => {
+          onProgress(report.text);
+        }
+      });
+
+      onProgress("Querying in-browser WebLLM model SmollM...");
+      const sysContent = "You are a chemical safety analysis expert. Respond ONLY with a valid JSON object matching the requested schema. Do not output conversational text or markdown code blocks (such as ```json).";
       const promptContent = `Analyze the safety of these ingredients: "${text}". Take this health profile into account for warning matches: "${healthConditions}".
       Return a JSON object containing an "ingredients" key, which holds an array of ingredient objects:
       {
@@ -297,88 +318,68 @@ export default function ProductAnalyzer({ onSearchCompound }: ProductAnalyzerPro
         ]
       }`;
 
-      setLlmProgressLog(prev => [...prev, `Querying Ollama at ${ollamaUrl}...`]);
-      const response = await fetch(`${ollamaUrl}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: selectedModel,
-          messages: [
-            { role: 'system', content: sysContent },
-            { role: 'user', content: promptContent }
-          ],
-          options: {
-            temperature: 0.1
-          },
-          stream: false
-        })
+      const reply = await newEngine.chat.completions.create({
+        messages: [
+          { role: 'system', content: sysContent },
+          { role: 'user', content: promptContent }
+        ],
+        temperature: 0.1
       });
 
-      if (!response.ok) {
-        throw new Error(`Ollama returned status ${response.status}: ${response.statusText}`);
+      const rawText = reply.choices[0].message.content || "";
+      let cleaned = rawText.trim();
+      if (cleaned.startsWith("```")) {
+        cleaned = cleaned.replace(/^```json\s*/i, "").replace(/```$/, "").trim();
       }
-
-      setLlmProgressLog(prev => [...prev, "Reading model response stream..."]);
-      const data = await response.json();
-      const content = data.message?.content || "";
       
-      setLlmProgressLog(prev => [...prev, "Response received. Parsing JSON checklist..."]);
-      
-      let parsed: any;
-      try {
-        parsed = JSON.parse(content);
-      } catch (e) {
-        const match = content.match(/\{[\s\S]*\}/);
-        if (match) {
-          parsed = JSON.parse(match[0]);
-        } else {
-          throw new Error("Could not parse JSON output from the local model.");
-        }
+      const parsed = JSON.parse(cleaned);
+      if (parsed && parsed.ingredients) {
+        onProgress("WebLLM SmollM analysis complete!");
+        return formatLlmParsedResponse(parsed, "In-Browser WebLLM (SmollM-135M via GPU)");
       }
+      throw new Error("Invalid output layout from WebLLM model.");
 
-      const ingredientsList = parsed.ingredients || parsed.components || parsed.chemicals || [];
-      if (!Array.isArray(ingredientsList)) {
-        throw new Error("Local model output did not contain an array of ingredients.");
-      }
-
-      const formattedIngredients = ingredientsList.map((item: any) => {
-        const name = item.common_name || item.name || "Unknown Ingredient";
-        let tier: 'Green' | 'Yellow' | 'Red' = 'Yellow';
-        const rawTier = String(item.safety_tier_rating || item.safety || '').toLowerCase();
-        if (rawTier.includes('green') || rawTier.includes('safe')) tier = 'Green';
-        else if (rawTier.includes('red') || rawTier.includes('danger') || rawTier.includes('hazard')) tier = 'Red';
-        
-        return {
-          original_text: name,
-          matched: true,
-          confidence_score: 0.95,
-          compound_uuid: name.toLowerCase().replace(/[^a-z0-9]+/g, '_'),
-          common_name: name,
-          molecular_formula: item.molecular_formula || item.formula || 'N/A',
-          safety_tier_rating: tier,
-          function_txt: item.function_txt || item.function || item.role || 'Active Component',
-          description: item.description || item.desc || 'Analyzed locally by local LLM.',
-          when_to_use: Array.isArray(item.when_to_use) ? item.when_to_use : [],
-          when_not_to_use: Array.isArray(item.when_not_to_use) ? item.when_not_to_use : [],
-          feedback: []
-        };
-      });
-
-      setLlmProgressLog(prev => [...prev, "Success! Ingredients analyzed locally."]);
-      return {
-        product_uuid: 'ollama_' + Date.now(),
-        ingredients: formattedIngredients,
-        gpuDiagnostics: {
-          mode: 'WebGPU (Hardware Accelerated)',
-          adapterInfo: `Ollama Local Inference (${selectedModel})`,
-          executionTimeMs: 0,
-          rawGpuScore: 99.9
-        }
-      };
-
-    } catch (err: any) {
-      throw new Error(`Local model execution failed: ${err.message || err}`);
+    } catch (e: any) {
+      console.warn("WebLLM failed:", e);
+      throw new Error(`In-browser LLM error: ${e.message || e}`);
     }
+  };
+
+  const formatLlmParsedResponse = (parsed: any, adapterName: string): ParseResponse => {
+    const ingredientsList = parsed.ingredients || parsed.components || parsed.chemicals || [];
+    const formatted = ingredientsList.map((item: any) => {
+      const name = item.common_name || item.name || "Unknown Ingredient";
+      let tier: 'Green' | 'Yellow' | 'Red' = 'Yellow';
+      const rawTier = String(item.safety_tier_rating || item.safety || '').toLowerCase();
+      if (rawTier.includes('green') || rawTier.includes('safe')) tier = 'Green';
+      else if (rawTier.includes('red') || rawTier.includes('danger') || rawTier.includes('hazard')) tier = 'Red';
+      
+      return {
+        original_text: name,
+        matched: true,
+        confidence_score: 0.95,
+        compound_uuid: name.toLowerCase().replace(/[^a-z0-9]+/g, '_'),
+        common_name: name,
+        molecular_formula: item.molecular_formula || item.formula || 'N/A',
+        safety_tier_rating: tier,
+        function_txt: item.function_txt || item.role || 'Active Component',
+        description: item.description || item.desc || 'Analyzed locally by in-browser LLM.',
+        when_to_use: Array.isArray(item.when_to_use) ? item.when_to_use : [],
+        when_not_to_use: Array.isArray(item.when_not_to_use) ? item.when_not_to_use : [],
+        feedback: []
+      };
+    });
+
+    return {
+      product_uuid: 'in_browser_llm_' + Date.now(),
+      ingredients: formatted,
+      gpuDiagnostics: {
+        mode: 'WebGPU (Hardware Accelerated)',
+        adapterInfo: adapterName,
+        executionTimeMs: 0,
+        rawGpuScore: 99.9
+      }
+    };
   };
 
   const handleParse = async () => {
@@ -394,25 +395,25 @@ export default function ProductAnalyzer({ onSearchCompound }: ProductAnalyzerPro
       ? 'Water, Citric Acid, Caffeine, Sodium Fluoride' 
       : ingredientsText;
 
-    if (engineType === 'local-llm') {
-      const startTime = performance.now();
-      try {
-        const llmReport = await runLocalLlmAnalysis(textToParse);
-        const endTime = performance.now();
-        llmReport.gpuDiagnostics.executionTimeMs = parseFloat((endTime - startTime).toFixed(1));
-        
-        setResult(llmReport);
-        setLoading(false);
-        
-        const email = localStorage.getItem('userEmail');
-        if (email === 'admin@gmail.com') {
-          triggerSheetsSync(llmReport);
-        }
-      } catch (err: any) {
-        setLlmError(err.message || String(err));
-        setLoading(false);
+    const startTime = performance.now();
+    try {
+      const llmReport = await runInBrowserLlm(textToParse, (stepText) => {
+        setLlmProgressLog(prev => [...prev, stepText]);
+      });
+      const endTime = performance.now();
+      llmReport.gpuDiagnostics.executionTimeMs = parseFloat((endTime - startTime).toFixed(1));
+      
+      setResult(llmReport);
+      setLoading(false);
+      
+      const email = localStorage.getItem('userEmail');
+      if (email === 'admin@gmail.com') {
+        triggerSheetsSync(llmReport);
       }
-    } else {
+    } catch (err: any) {
+      console.warn("In-browser LLM failed, using static database fallback:", err);
+      setLlmProgressLog(prev => [...prev, "In-browser LLM failed. Using static offline database fallback..."]);
+      
       const gpuResults = await runWebGpuAnalysis(textToParse);
       await processAnalysisResults(textToParse, gpuResults);
       setLoading(false);
@@ -421,80 +422,8 @@ export default function ProductAnalyzer({ onSearchCompound }: ProductAnalyzerPro
 
   const runLocalLlmAnalysisForTokens = async (tokensStr: string): Promise<any[]> => {
     try {
-      const sysContent = `You are a chemical safety analysis expert. Respond ONLY with a valid JSON object matching the requested schema. Do not output conversational text or markdown code blocks (such as \`\`\`json).`;
-      const promptContent = `Analyze the safety of these ingredients: "${tokensStr}". Take this health profile into account for warning matches: "${healthConditions}".
-      Return a JSON object containing an "ingredients" key, which holds an array of ingredient objects:
-      {
-        "ingredients": [
-          {
-            "common_name": "Ingredient Name",
-            "molecular_formula": "Formula",
-            "safety_tier_rating": "Green" | "Yellow" | "Red",
-            "function_txt": "Function",
-            "description": "Short explanation",
-            "when_to_use": ["condition"],
-            "when_not_to_use": ["condition"]
-          }
-        ]
-      }`;
-
-      const response = await fetch(`${ollamaUrl}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model: selectedModel,
-          messages: [
-            { role: 'system', content: sysContent },
-            { role: 'user', content: promptContent }
-          ],
-          options: {
-            temperature: 0.1
-          },
-          stream: false
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Ollama returned status ${response.status}`);
-      }
-
-      const data = await response.json();
-      const content = data.message?.content || "";
-      
-      let parsed: any;
-      try {
-        parsed = JSON.parse(content);
-      } catch (e) {
-        const match = content.match(/\{[\s\S]*\}/);
-        if (match) {
-          parsed = JSON.parse(match[0]);
-        } else {
-          throw new Error("Could not parse JSON output.");
-        }
-      }
-
-      const ingredientsList = parsed.ingredients || parsed.components || parsed.chemicals || [];
-      if (!Array.isArray(ingredientsList)) {
-        throw new Error("Missing ingredients array.");
-      }
-
-      return ingredientsList.map((item: any) => {
-        const name = item.common_name || item.name || "Unknown";
-        let tier: 'Green' | 'Yellow' | 'Red' = 'Yellow';
-        const rawTier = String(item.safety_tier_rating || item.safety || '').toLowerCase();
-        if (rawTier.includes('green') || rawTier.includes('safe')) tier = 'Green';
-        else if (rawTier.includes('red') || rawTier.includes('danger') || rawTier.includes('hazard')) tier = 'Red';
-        
-        return {
-          common_name: name,
-          molecular_formula: item.molecular_formula || item.formula || 'N/A',
-          safety_tier_rating: tier,
-          function_txt: item.function_txt || item.role || 'Active Component',
-          description: item.description || item.desc || 'Analyzed locally by local LLM.',
-          when_to_use: Array.isArray(item.when_to_use) ? item.when_to_use : [],
-          when_not_to_use: Array.isArray(item.when_not_to_use) ? item.when_not_to_use : []
-        };
-      });
+      const report = await runInBrowserLlm(tokensStr, () => {});
+      return report.ingredients;
     } catch (e) {
       console.warn("Local token LLM query failed:", e);
       return [];
@@ -705,97 +634,11 @@ export default function ProductAnalyzer({ onSearchCompound }: ProductAnalyzerPro
         </p>
       </div>
 
-      {/* Engine Selection Tabs */}
-      <div className="flex bg-slate-100 p-1 rounded-xl max-w-md">
-        <button 
-          onClick={() => setEngineType('webgpu')}
-          className={`flex-1 py-1.5 text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer ${engineType === 'webgpu' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
-        >
-          <Cpu className="w-3.5 h-3.5" /> Built-in WebGPU Shader
-        </button>
-        <button 
-          onClick={() => setEngineType('local-llm')}
-          className={`flex-1 py-1.5 text-xs font-bold rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer ${engineType === 'local-llm' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
-        >
-          <Brain className="w-3.5 h-3.5" /> Local LLM Engine (Ollama)
-        </button>
-      </div>
-
       <div className={isAdmin ? "grid grid-cols-1 lg:grid-cols-3 gap-6 items-stretch" : "max-w-2xl mx-auto"}>
         
         {/* Left Input Section */}
         <div className={`${isAdmin ? "lg:col-span-2" : "w-full"} bg-white border border-slate-200 rounded-3xl p-6 md:p-8 shadow-sm space-y-6 flex flex-col justify-between`}>
           <div className="space-y-6">
-            
-            {/* Ollama local settings panel */}
-            {engineType === 'local-llm' && (
-              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-3 animate-fade-in mb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Brain className="w-4 h-4 text-indigo-500" />
-                    <span className="text-xs font-bold text-slate-700">Ollama Local AI Connection</span>
-                  </div>
-                  {ollamaConnected ? (
-                    <span className="flex items-center gap-1 text-[9px] font-bold text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full uppercase">
-                      <Wifi className="w-2.5 h-2.5 animate-pulse text-green-600" /> Connected
-                    </span>
-                  ) : (
-                    <span className="flex items-center gap-1 text-[9px] font-bold text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full uppercase">
-                      <WifiOff className="w-2.5 h-2.5 text-red-500" /> Offline
-                    </span>
-                  )}
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Ollama Host URL</label>
-                    <input 
-                      type="text" 
-                      value={ollamaUrl}
-                      onChange={(e) => setOllamaUrl(e.target.value)}
-                      className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs font-mono outline-none"
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex justify-between items-center">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Select Model</label>
-                      <button 
-                        onClick={() => fetchOllamaModels(ollamaUrl)} 
-                        className="text-[9px] text-indigo-600 hover:text-indigo-500 font-bold flex items-center gap-0.5 cursor-pointer animate-fade-in"
-                      >
-                        <RefreshCw className="w-2 h-2" /> Refresh
-                      </button>
-                    </div>
-                    {installedModels.length > 0 ? (
-                      <select 
-                        value={selectedModel}
-                        onChange={(e) => setSelectedModel(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none"
-                      >
-                        {installedModels.map((m) => <option key={m} value={m}>{m}</option>)}
-                      </select>
-                    ) : (
-                      <input 
-                        type="text" 
-                        value={selectedModel}
-                        onChange={(e) => setSelectedModel(e.target.value)}
-                        className="w-full bg-white border border-slate-200 rounded-lg p-2 text-xs outline-none"
-                        placeholder="e.g. gemma4:e4b"
-                      />
-                    )}
-                  </div>
-                </div>
-                
-                {!ollamaConnected && (
-                  <p className="text-[10px] text-slate-500 leading-normal bg-amber-50 border border-amber-200 p-2.5 rounded-xl flex items-start gap-1.5">
-                    <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
-                    <span>
-                      Could not reach Ollama at <strong>{ollamaUrl}</strong>. Make sure Ollama is running on your machine and you have executed <code>OLLAMA_ORIGINS="*" ollama serve</code> to enable browser access.
-                    </span>
-                  </p>
-                )}
-              </div>
-            )}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Source Input */}
               <div className="space-y-3">
@@ -897,9 +740,9 @@ export default function ProductAnalyzer({ onSearchCompound }: ProductAnalyzerPro
             )}
           </button>
 
-          {loading && engineType === 'local-llm' && llmProgressLog.length > 0 && (
-            <div className="mt-4 bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 text-xs font-mono text-slate-655">
-              <div className="font-bold flex items-center gap-1.5 text-indigo-650">
+          {loading && llmProgressLog.length > 0 && (
+            <div className="mt-4 bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2 text-xs font-mono text-slate-600">
+              <div className="font-bold flex items-center gap-1.5 text-indigo-600">
                 <Activity className="w-3.5 h-3.5 animate-spin" />
                 <span>Local AI Processing Logs:</span>
               </div>
