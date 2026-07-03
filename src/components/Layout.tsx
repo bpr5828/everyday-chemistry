@@ -30,8 +30,12 @@ export default function Layout({ children, activeTab, setActiveTab, pendingCount
   ];
 
   const theme2Items = [
-    { id: 'cdisc-validator', label: 'CDISC Validator', icon: Activity, desc: 'Data quality checks' },
+    { id: 'clinical-trials-resources', label: 'Clinical Trials Resources', icon: Activity, desc: 'Databases & guidance' },
     { id: 'biotech-resources', label: 'Biotech Resources', icon: BookOpen, desc: 'Databases & learning' },
+  ];
+
+  const projectItems = [
+    { id: 'summer-project', label: '2026 Summer Project', icon: GraduationCap, desc: 'Mentorship Program Planner' },
   ];
 
   const creatorItems = [
@@ -101,6 +105,7 @@ export default function Layout({ children, activeTab, setActiveTab, pendingCount
           <nav>
             {renderNavGroup('Product & Consumer Lab', theme1Items)}
             {renderNavGroup('Clinical Trials & Biotech', theme2Items)}
+            {renderNavGroup('Project', projectItems)}
             {renderNavGroup('Creator', creatorItems)}
             {userEmail === 'admin@gmail.com' && renderNavGroup('Utilities', [adminItem])}
           </nav>

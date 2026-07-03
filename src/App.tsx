@@ -7,11 +7,12 @@ import Articles from './components/Articles';
 import PodcastHub from './components/PodcastHub';
 import CitizenMap from './components/CitizenMap';
 import AdminDashboard from './components/AdminDashboard';
-import CdiscValidator from './components/CdiscValidator';
+import ClinicalTrialsResources from './components/ClinicalTrialsResources';
 import BiotechResources from './components/BiotechResources';
 import LandingPage from './components/LandingPage';
 import BioPage from './components/BioPage';
 import CurieChatbot from './components/CurieChatbot';
+import SummerProject from './components/SummerProject';
 
 export default function App() {
   const [userEmail, setUserEmail] = useState<string | null>(() => localStorage.getItem('userEmail'));
@@ -70,10 +71,12 @@ export default function App() {
             pendingCount={pendingCount}
           />
         );
-      case 'cdisc-validator':
-        return <CdiscValidator />;
+      case 'clinical-trials-resources':
+        return <ClinicalTrialsResources />;
       case 'biotech-resources':
         return <BiotechResources />;
+      case 'summer-project':
+        return <SummerProject />;
       case 'bio':
         return <BioPage />;
       default:

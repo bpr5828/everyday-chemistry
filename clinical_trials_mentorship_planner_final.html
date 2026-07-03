@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Clinical Trials Mentorship Program Planner</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --ink: #183153;
+      --muted: #5f6f86;
+      --accent: #2563eb;
+      --accent-soft: #dbeafe;
+      --line: #d9e2ef;
+      --good: #0f766e;
+      --good-soft: #ecfdf5;
+      --warn: #b45309;
+      --warn-soft: #fef3c7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px;
+    }
+    .hero {
+      background: linear-gradient(135deg, #183153 0%, #2563eb 100%);
+      color: #fff;
+      padding: 32px;
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(24,49,83,.18);
+      margin-bottom: 24px;
+    }
+    .hero h1 { margin: 0 0 10px; font-size: 2rem; }
+    .hero p { margin: 6px 0; max-width: 900px; }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 22px;
+      flex-wrap: wrap;
+    }
+    .tab-btn {
+      border: 1px solid var(--line);
+      background: var(--card);
+      color: var(--muted);
+      font-weight: 700;
+      font-size: 1rem;
+      padding: 12px 20px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all .15s ease;
+    }
+    .tab-btn:hover { color: var(--accent); border-color: var(--accent); }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 6px 16px rgba(37,99,235,.25);
+    }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 4px 14px rgba(15,23,42,.05);
+    }
+    .week-tag {
+      display: inline-block;
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.9rem;
+      padding: 6px 10px;
+      border-radius: 999px;
+      margin-bottom: 8px;
+    }
+    h2, h3 { margin-top: 0; }
+    ul { padding-left: 20px; margin: 8px 0 0; }
+    li { margin: 6px 0; }
+    .label {
+      font-size: 0.86rem;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      color: var(--muted);
+      font-weight: 700;
+      margin-top: 14px;
+      margin-bottom: 6px;
+    }
+    .links a {
+      color: var(--accent);
+      text-decoration: none;
+      word-break: break-word;
+    }
+    .links a:hover { text-decoration: underline; }
+    .full {
+      grid-column: 1 / -1;
+    }
+    .outcome {
+      background: #ecfdf5;
+      border-left: 4px solid var(--good);
+      padding: 10px 12px;
+      border-radius: 10px;
+    }
+    .footer-note {
+      color: var(--muted);
+      font-size: 0.95rem;
+      margin-top: 20px;
+    }
+
+    /* Tracker overall progress */
+    .overall {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 22px;
+      box-shadow: 0 4px 14px rgba(15,23,42,.05);
+      margin-bottom: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+    .overall-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .overall h2 { margin: 0; }
+    .overall-pct { font-size: 1.6rem; font-weight: 800; color: var(--accent); }
+    .bar {
+      height: 16px;
+      background: #e6edf7;
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 12px 0 6px;
+    }
+    .bar > span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #2563eb, #0f766e);
+      border-radius: 999px;
+      transition: width .35s ease;
+    }
+    .overall-meta { color: var(--muted); font-size: 0.92rem; }
+    .reset-btn {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--muted);
+      font-weight: 700;
+      padding: 8px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .reset-btn:hover { color: #b91c1c; border-color: #b91c1c; }
+
+    /* Tracker day cards */
+    .day-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .day-progress {
+      flex: 1 1 160px;
+      min-width: 140px;
+    }
+    .mini-bar {
+      height: 10px;
+      background: #e6edf7;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .mini-bar > span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: var(--accent);
+      transition: width .3s ease;
+    }
+    .day-pct {
+      font-weight: 700;
+      color: var(--muted);
+      font-size: 0.85rem;
+      white-space: nowrap;
+    }
+    .status-pill {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+    .st-todo { background: #f1f5f9; color: var(--muted); }
+    .st-prog { background: var(--warn-soft); color: var(--warn); }
+    .st-done { background: var(--good-soft); color: var(--good); }
+
+    .task-list { list-style: none; padding: 0; margin: 14px 0 0; }
+    .task-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      margin: 8px 0;
+      transition: background .15s ease;
+    }
+    .task-list li.checked {
+      background: var(--good-soft);
+      border-color: #b7e4c7;
+    }
+    .task-list li.checked .task-text {
+      text-decoration: line-through;
+      color: var(--muted);
+    }
+    .task-list input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      margin-top: 2px;
+      cursor: pointer;
+      accent-color: var(--good);
+      flex-shrink: 0;
+    }
+    .task-text { cursor: pointer; }
+
+    @media (max-width: 860px) {
+      .grid { grid-template-columns: 1fr; }
+      .wrap { padding: 18px; }
+      .hero { padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero">
+      <h1>Clinical Trials Mentorship Program Planner</h1>
+      <p><strong>Audience:</strong> High-school students with no prior knowledge of clinical trials or clinical data.</p>
+      <p><strong>Program Goal:</strong> Introduce students to how medicines are tested, how study data is collected and standardized, and how simple Python checks can be used to find data quality issues.</p>
+      <p><strong>Format:</strong> 2 weeks, beginner-friendly, using public learning materials and public sample datasets.</p>
+    </section>
+
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="overview">Program Overview</button>
+      <button class="tab-btn" data-tab="tracker">Detailed Task Tracker</button>
+    </div>
+
+    <!-- ============ TAB 1: OVERVIEW ============ -->
+    <section class="tab-panel active" id="overview">
+    <div class="grid">
+      <article class="card">
+        <div class="week-tag">Week 1 • Foundations</div>
+        <h2>Week 1 Objective</h2>
+        <p>Build basic understanding of clinical trials, patient data collection, data standards, and why data quality matters.</p>
+
+        <div class="label">Expected Week Outcome</div>
+        <div class="outcome">Students can explain the clinical trial lifecycle, describe what study data looks like, and recognize why organized, standardized data is important.</div>
+      </article>
+
+      <article class="card">
+        <div class="week-tag">Week 2 • Application</div>
+        <h2>Week 2 Objective</h2>
+        <p>Move from concepts into practice by reading simple datasets, defining data checks, and building a beginner-level Python validator.</p>
+
+        <div class="label">Expected Week Outcome</div>
+        <div class="outcome">Students can load a CSV file, understand basic validation rules, and demonstrate a small Python project that detects data issues.</div>
+      </article>
+
+      <article class="card">
+        <div class="week-tag">Week 1</div>
+        <h3>Day 1: What Is a Clinical Trial?</h3>
+        <div class="label">Tasks</div>
+        <ul>
+          <li>Learn what clinical trials are and why they are conducted.</li>
+          <li>Understand the basic trial phases I-IV at a beginner level.</li>
+          <li>Create a simple journey map: idea → testing → approval → patient use.</li>
+        </ul>
+        <div class="label">Expected Outcome</div>
+        <p>Student can explain, in simple language, how a medicine is tested before public use.</p>
+        <div class="label">Reference Links</div>
+        <div class="links">
+          <a href="https://www.fda.gov/patients/learn-about-drug-and-device-approvals" target="_blank">FDA: Learn About Drug and Device Approvals</a><br />
+          <a href="https://www.fda.gov/patients/drug-development-process/step-3-clinical-research" target="_blank">FDA: Step 3 - Clinical Research</a><br />
+          <a href="https://www.youtube.com/watch?v=DhxD6sVQEYc" target="_blank">Video: Drug Discovery Process</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="week-tag">Week 1</div>
+        <h3>Day 2: How Clinical Data Is Collected</h3>
+        <div class="label">Tasks</div>
+        <ul>
+          <li>Learn what patient study data looks like.</li>
+          <li>Review a mock Case Report Form (CRF).</li>
+          <li>Identify common fields such as patient ID, visit, age, sex, and measurements.</li>
+        </ul>
+        <div class="label">Expected Outcome</div>
+        <p>Student understands that clinical data is collected in structured forms and later moved into datasets.</p>
+        <div class="label">Reference Links</div>
+        <div class="links">
+          <a href="https://www.cdisc.org/kb/ecrf" target="_blank">CDISC eCRF Portal (Sample Case Report Forms)</a><br />
+          <a href="https://www.youtube.com/watch?v=Q1lioYZCeCw" target="_blank">Video: Annotated CRF with SDTM Variables</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="week-tag">Week 1</div>
+        <h3>Day 3: Why Data Standards Matter</h3>
+        <div class="label">Tasks</div>
+        <ul>
+          <li>Compare messy data with standardized data.</li>
+          <li>Discuss why consistency matters in science and healthcare.</li>
+          <li>Create a small raw-data versus clean-data comparison chart.</li>
+        </ul>
+        <div class="label">Expected Outcome</div>
+        <p>Student can explain why the same type of information should be captured in a consistent format.</p>
+        <div class="label">Reference Links</div>
+        <div class="links">
+          <a href="https://www.cdisc.org/standards" target="_blank">CDISC Standards Overview</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="week-tag">Week 1</div>
+        <h3>Day 4: SDTM Basics</h3>
+        <div class="label">Tasks</div>
+        <ul>
+          <li>Introduce SDTM as an organized way to store study data.</li>
+          <li>Review simple domains such as DM (Demographics), AE (Adverse Events), and VS (Vital Signs).</li>
+          <li>Open sample data files and identify key columns.</li>
+        </ul>
+        <div class="label">Expected Outcome</div>
+        <p>Student can recognize that different datasets store different categories of clinical trial information.</p>
+        <div class="label">Reference Links</div>
+        <div class="links">
+          <a href="https://cdiscdataset.com/" target="_blank">CDISC Dataset Generator (Sample SDTM Data: DM, VS, LB, AE, CM, EX, MH, PE, EG)</a><br />
+          <a href="https://github.com/phuse-org/phuse-scripts/tree/master/data" target="_blank">PHUSE Public Sample Data</a><br />
+          <a href="https://www.youtube.com/shorts/Y0S3L2rgQ_w" target="_blank">Video: SDTM Overview</a><br />
+          <a href="https://www.youtube.com/shorts/sEgMitsdNTM" target="_blank">Video: ADaM Overview</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="week-tag">Week 1</div>
+        <h3>Day 5: Why Data Quality Matters</h3>
+        <div class="label">Tasks</div>
+        <ul>
+          <li>Review examples of missing, duplicate, or badly formatted data.</li>
+          <li>Discuss how poor-quality data can affect decisions.</li>
+          <li>Prepare a short summary with three examples of bad data.</li>
+        </ul>
+        <div class="label">Expected Outcome</div>
+        <p>Student understands that data quality checks are important before analysis or submission.</p>
+        <div class="label">Reference Links</div>
+        <div class="links">
+          <a href="https://www.fda.gov/patients" target="_blank">FDA for Patients</a><br />
+          <a href="https://www.youtube.com/watch?v=h1uJCZtCoBQ" target="_blank">Video: SDTM Validation</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="week-tag">Week 2</div>
+        <h3>Day 6: Python Basics for Data</h3>
+        <div class="label">Tasks</div>
+        <ul>
+          <li>Open Google Colab or Jupyter Notebook.</li>
+          <li>Install or import pandas.</li>
+          <li>Read a CSV file and print the first few rows.</li>
+        </ul>
+        <div class="label">Expected Outcome</div>
+        <p>Student can load a dataset and view its structure using beginner-level Python.</p>
+        <div class="label">Reference Links</div>
+        <div class="links">
+          <a href="https://colab.research.google.com" target="_blank">Google Colab</a><br />
+          <a href="https://cdiscdataset.com/" target="_blank">CDISC Dataset Generator (Download CSV Sample Data)</a><br />
+          <a href="https://pandas.pydata.org/docs/getting_started/intro_tutorials/01_table_oriented.html" target="_blank">pandas Intro Tutorial</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="week-tag">Week 2</div>
+        <h3>Day 7: Understanding Data Validation</h3>
+        <div class="label">Tasks</div>
+        <ul>
+          <li>Learn what validation means in data work.</li>
+          <li>Identify common checks such as missing values and duplicate IDs.</li>
+          <li>List the checks students want to implement in code.</li>
+        </ul>
+        <div class="label">Expected Outcome</div>
+        <p>Student can describe what a validation rule is and provide examples.</p>
+        <div class="label">Reference Links</div>
+        <div class="links">
+          <a href="https://www.youtube.com/watch?v=h1uJCZtCoBQ" target="_blank">Video: SDTM Validation</a><br />
+          <a href="https://cdiscdataset.com/" target="_blank">CDISC Dataset Generator (Sample SDTM Data)</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="week-tag">Week 2</div>
+        <h3>Day 8: Define the 5 Core Rules</h3>
+        <div class="label">Tasks</div>
+        <ul>
+          <li>Translate each rule into plain English.</li>
+          <li>Write simple logic or pseudocode for each rule.</li>
+          <li>Choose which dataset columns are needed for each check.</li>
+        </ul>
+        <div class="label">Expected Outcome</div>
+        <p>Student can map a business rule into a logical validation step.</p>
+        <div class="label">Reference Links</div>
+        <div class="links">
+          <a href="https://cdiscdataset.com/" target="_blank">CDISC Dataset Generator (Sample SDTM Data)</a><br />
+          <a href="https://github.com/phuse-org/phuse-scripts/tree/master/data" target="_blank">PHUSE Public Sample Data</a><br />
+          <a href="https://www.cdisc.org/standards" target="_blank">CDISC Standards Overview</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="week-tag">Week 2</div>
+        <h3>Day 9: Build the Python Validator</h3>
+        <div class="label">Tasks</div>
+        <ul>
+          <li>Code checks for duplicate IDs, missing required fields, date format, domain name alignment, and simple status logic.</li>
+          <li>Print PASS/FAIL messages.</li>
+          <li>Create a summary of issues found.</li>
+        </ul>
+        <div class="label">Expected Outcome</div>
+        <p>Student has a working beginner-level script that checks sample data and reports simple errors.</p>
+        <div class="label">Reference Links</div>
+        <div class="links">
+          <a href="https://colab.research.google.com" target="_blank">Google Colab</a><br />
+          <a href="https://pandas.pydata.org/" target="_blank">pandas Documentation</a>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="week-tag">Week 2</div>
+        <h3>Day 10: Final Presentation and Demo</h3>
+        <div class="label">Tasks</div>
+        <ul>
+          <li>Prepare a short presentation covering what was learned.</li>
+          <li>Show the sample datasets used.</li>
+          <li>Demo the validator and explain the results.</li>
+        </ul>
+        <div class="label">Expected Outcome</div>
+        <p>Student presents the problem, explains the logic, and demonstrates the project clearly.</p>
+        <div class="label">Reference Links</div>
+        <div class="links">
+          <a href="https://www.canva.com/education/students/" target="_blank">Canva for Students</a>
+        </div>
+      </article>
+
+      <article class="card full">
+        <div class="week-tag">Final Project</div>
+        <h2>Expected Final Project Output</h2>
+        <ul>
+          <li><strong>Python Script:</strong> Reads at least 2 sample datasets such as DM and VS or AE.</li>
+          <li><strong>Validation Rules Implemented:</strong> 5 simple checks including unique ID, required fields, date format, dataset/domain match, and a basic status rule.</li>
+          <li><strong>Output Report:</strong> Printed summary showing PASS/FAIL and number of issues found.</li>
+          <li><strong>Presentation Deck:</strong> 5-8 slides explaining clinical trials basics, dataset used, validation rules, code approach, and demo results.</li>
+          <li><strong>Demo Evidence:</strong> Screenshot or notebook output showing errors detected in the sample data.</li>
+        </ul>
+
+        <div class="label">Sample Final Output Format</div>
+        <pre style="background:#0f172a;color:#e2e8f0;padding:16px;border-radius:12px;overflow:auto;">Validation Summary
+------------------
+USUBJID uniqueness: FAILED (2 duplicates)
+Required fields: PASSED
+Date format: FAILED (3 invalid dates)
+Domain check: PASSED
+Status rule: FAILED (2 invalid entries)</pre>
+
+        <div class="label">Public Reference Links for Final Project</div>
+        <div class="links">
+          <a href="https://cdiscdataset.com/" target="_blank">CDISC Dataset Generator (Sample SDTM &amp; ADaM Data)</a><br />
+          <a href="https://github.com/phuse-org/phuse-scripts/tree/master/data" target="_blank">PHUSE Public Sample Data</a><br />
+          <a href="https://www.cdisc.org/standards" target="_blank">CDISC Standards Overview</a><br />
+          <a href="https://colab.research.google.com" target="_blank">Google Colab</a><br />
+          <a href="https://pandas.pydata.org/" target="_blank">pandas Documentation</a>
+        </div>
+      </article>
+    </div>
+    </section>
+
+    <!-- ============ TAB 2: DETAILED TASK TRACKER ============ -->
+    <section class="tab-panel" id="tracker">
+      <div class="overall">
+        <div class="overall-top">
+          <h2>Overall Completion Status</h2>
+          <span class="overall-pct" id="overallPct">0%</span>
+        </div>
+        <div class="bar"><span id="overallBar"></span></div>
+        <div class="overall-top">
+          <span class="overall-meta" id="overallMeta">0 of 0 tasks complete</span>
+          <button class="reset-btn" id="resetBtn">Reset Progress</button>
+        </div>
+      </div>
+
+      <p class="footer-note" style="margin-top:0;">Tick each small task as your child finishes it. Each day shows its own progress, and the bar at the top tracks the whole program. Progress is saved automatically in this browser.</p>
+
+      <div class="grid" id="trackerGrid"></div>
+    </section>
+
+    <p class="footer-note">This planner is intentionally simplified for high-school learners and focuses on foundational understanding, guided practice, and a small but meaningful final project.</p>
+  </div>
+
+  <script>
+    // Granular, kid-friendly subtasks for each day.
+    const PLAN = [
+      { id: "d1", week: "Week 1", title: "Day 1: What Is a Clinical Trial?", tasks: [
+        "Watch the Drug Discovery Process video (link in Program Overview).",
+        "Write one sentence in your own words: \"A clinical trial is...\".",
+        "List 3 reasons why scientists test medicines before people use them.",
+        "Read the FDA \"Learn About Approvals\" page (top section only).",
+        "Learn the 4 trial phases and write one line about each phase.",
+        "Draw a journey map: idea -> testing -> approval -> patient use.",
+        "Explain your journey map out loud to a parent or mentor."
+      ]},
+      { id: "d2", week: "Week 1", title: "Day 2: How Clinical Data Is Collected", tasks: [
+        "Learn what \"patient study data\" means with a simple example.",
+        "Watch the Annotated CRF with SDTM Variables video (link in Program Overview).",
+        "Open and look at a mock Case Report Form (CRF) from the CDISC eCRF Portal.",
+        "Circle or list 5 fields you see on the form.",
+        "Match each field to a type: ID, date, number, or category.",
+        "Write why a Patient ID must be unique for every person.",
+        "Draw how a paper form becomes a row in a data table."
+      ]},
+      { id: "d3", week: "Week 1", title: "Day 3: Why Data Standards Matter", tasks: [
+        "Look at one messy data example and one clean data example.",
+        "List 3 problems you notice in the messy data.",
+        "Write why \"M\", \"Male\", and \"male\" being mixed is a problem.",
+        "Make a 2-column chart: Raw Data vs. Clean Data.",
+        "Fix 3 messy rows by hand to make them consistent.",
+        "Say one reason consistency matters in hospitals."
+      ]},
+      { id: "d4", week: "Week 1", title: "Day 4: SDTM Basics", tasks: [
+        "Watch the SDTM Overview video (link in Program Overview).",
+        "Watch the ADaM Overview video (link in Program Overview, optional).",
+        "Learn that SDTM is just an organized way to store study data.",
+        "Read what the DM (Demographics) domain holds.",
+        "Read what the AE (Adverse Events) domain holds.",
+        "Read what the VS (Vital Signs) domain holds.",
+        "Generate or download a sample dataset from the CDISC Dataset Generator.",
+        "Open a sample data file and look at the columns.",
+        "Write down 3 column names and what each one means.",
+        "Match each sample file to the correct domain (DM/AE/VS)."
+      ]},
+      { id: "d5", week: "Week 1", title: "Day 5: Why Data Quality Matters", tasks: [
+        "Watch the SDTM Validation video (link in Program Overview).",
+        "Learn the words: missing, duplicate, and wrong format.",
+        "Find 1 example of a missing value in sample data.",
+        "Find 1 example of a duplicate ID in sample data.",
+        "Find 1 example of a badly formatted date.",
+        "Write 2 sentences on how bad data could hurt a decision.",
+        "Make a short summary slide with your 3 bad-data examples."
+      ]},
+      { id: "d6", week: "Week 2", title: "Day 6: Python Basics for Data", tasks: [
+        "Open Google Colab and create a new notebook.",
+        "Type and run your first line: print(\"Hello\").",
+        "Import pandas with: import pandas as pd.",
+        "Upload or load a sample CSV file.",
+        "Read the CSV into a variable using pd.read_csv().",
+        "Show the first rows with df.head().",
+        "Print how many rows and columns with df.shape."
+      ]},
+      { id: "d7", week: "Week 2", title: "Day 7: Understanding Data Validation", tasks: [
+        "Learn what \"validation\" means in simple words.",
+        "List 4 common checks (missing, duplicate, format, range).",
+        "Pick which checks you want to build in your project.",
+        "Write each chosen check as a plain-English sentence.",
+        "Decide what a PASS and a FAIL should look like."
+      ]},
+      { id: "d8", week: "Week 2", title: "Day 8: Define the 5 Core Rules", tasks: [
+        "Rule 1: every Patient ID must be unique.",
+        "Rule 2: required fields must not be empty.",
+        "Rule 3: dates must follow the right format.",
+        "Rule 4: the domain/dataset name must match.",
+        "Rule 5: a simple status value must be valid.",
+        "Write pseudocode (plain steps) for each of the 5 rules.",
+        "List which columns each rule needs."
+      ]},
+      { id: "d9", week: "Week 2", title: "Day 9: Build the Python Validator", tasks: [
+        "Write code to check for duplicate IDs.",
+        "Write code to check for missing required fields.",
+        "Write code to check the date format.",
+        "Write code to check the domain name matches.",
+        "Write code to check the status value is valid.",
+        "Print a PASS or FAIL message for each rule.",
+        "Print a summary of how many issues were found.",
+        "Test the script on a sample dataset and fix any errors."
+      ]},
+      { id: "d10", week: "Week 2", title: "Day 10: Final Presentation and Demo", tasks: [
+        "Make 5-8 slides covering what you learned.",
+        "Add a slide showing the sample datasets you used.",
+        "Add a slide listing your 5 validation rules.",
+        "Add a slide with a screenshot of your code output.",
+        "Practice your demo out loud at least once.",
+        "Present and run the validator live for your mentor."
+      ]}
+    ];
+
+    const STORAGE_KEY = "ctm_tracker_v1";
+    const grid = document.getElementById("trackerGrid");
+
+    function loadState() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; }
+      catch (e) { return {}; }
+    }
+    function saveState(state) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+    let state = loadState();
+
+    function statusPill(done, total) {
+      if (done === 0) return '<span class="status-pill st-todo">Not Started</span>';
+      if (done < total) return '<span class="status-pill st-prog">In Progress</span>';
+      return '<span class="status-pill st-done">Completed</span>';
+    }
+
+    // Build tracker cards
+    PLAN.forEach(day => {
+      const card = document.createElement("article");
+      card.className = "card";
+      card.dataset.day = day.id;
+
+      const tasksHtml = day.tasks.map((t, i) => {
+        const key = day.id + ":" + i;
+        const checked = state[key] ? "checked" : "";
+        return `<li class="${checked ? "checked" : ""}">
+          <input type="checkbox" data-key="${key}" id="${key}" ${checked} />
+          <label class="task-text" for="${key}">${t}</label>
+        </li>`;
+      }).join("");
+
+      card.innerHTML = `
+        <div class="week-tag">${day.week}</div>
+        <div class="day-head">
+          <h3 style="margin:0;flex:1 1 100%;">${day.title}</h3>
+          <div class="day-progress">
+            <div class="mini-bar"><span data-bar="${day.id}"></span></div>
+          </div>
+          <span class="day-pct" data-pct="${day.id}">0/${day.tasks.length}</span>
+          <span data-pill="${day.id}"></span>
+        </div>
+        <ul class="task-list">${tasksHtml}</ul>
+      `;
+      grid.appendChild(card);
+    });
+
+    function updateDay(dayId) {
+      const day = PLAN.find(d => d.id === dayId);
+      let done = 0;
+      day.tasks.forEach((t, i) => { if (state[dayId + ":" + i]) done++; });
+      const total = day.tasks.length;
+      const pct = total ? Math.round((done / total) * 100) : 0;
+      grid.querySelector(`[data-bar="${dayId}"]`).style.width = pct + "%";
+      grid.querySelector(`[data-pct="${dayId}"]`).textContent = done + "/" + total;
+      grid.querySelector(`[data-pill="${dayId}"]`).innerHTML = statusPill(done, total);
+    }
+
+    function updateOverall() {
+      let total = 0, done = 0;
+      PLAN.forEach(day => {
+        day.tasks.forEach((t, i) => {
+          total++;
+          if (state[day.id + ":" + i]) done++;
+        });
+      });
+      const pct = total ? Math.round((done / total) * 100) : 0;
+      document.getElementById("overallPct").textContent = pct + "%";
+      document.getElementById("overallBar").style.width = pct + "%";
+      document.getElementById("overallMeta").textContent =
+        done + " of " + total + " tasks complete" + (pct === 100 ? " — Program finished! 🎉" : "");
+    }
+
+    function refreshAll() {
+      PLAN.forEach(d => updateDay(d.id));
+      updateOverall();
+    }
+
+    grid.addEventListener("change", (e) => {
+      if (e.target.matches('input[type="checkbox"]')) {
+        const key = e.target.dataset.key;
+        if (e.target.checked) state[key] = true; else delete state[key];
+        saveState(state);
+        e.target.closest("li").classList.toggle("checked", e.target.checked);
+        updateDay(key.split(":")[0]);
+        updateOverall();
+      }
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", () => {
+      if (!confirm("Clear all task progress?")) return;
+      state = {};
+      saveState(state);
+      grid.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.checked = false;
+        cb.closest("li").classList.remove("checked");
+      });
+      refreshAll();
+    });
+
+    // Tab switching
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+        document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+        btn.classList.add("active");
+        document.getElementById(btn.dataset.tab).classList.add("active");
+      });
+    });
+
+    refreshAll();
+  </script>
+</body>
+</html>
