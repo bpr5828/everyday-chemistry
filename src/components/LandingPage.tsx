@@ -13,7 +13,7 @@ export default function LandingPage({ onEnter }: LandingPageProps) {
   const [submitted, setSubmitted] = useState(false);
 
   const checkEmailExists = async () => {
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       setError('Please enter a valid email address.');
       return;
     }
@@ -29,13 +29,13 @@ export default function LandingPage({ onEnter }: LandingPageProps) {
       
       setSubmitted(true);
       setTimeout(() => {
-        onEnter(email);
+        onEnter(email || 'guest');
       }, 800);
 
     } catch (err) {
       console.error('Failed to submit email:', err);
       setError('Failed to record acknowledgment. You may proceed anyway.');
-      setTimeout(() => onEnter(email), 1500);
+      setTimeout(() => onEnter(email || 'guest'), 1500);
     } finally {
       setLoading(false);
     }
@@ -89,7 +89,7 @@ export default function LandingPage({ onEnter }: LandingPageProps) {
           <div className="relative z-10 space-y-4 max-w-sm mx-auto text-center">
             <div>
               <h2 className="text-xl font-bold font-display text-slate-800">Enter Portal</h2>
-              <p className="text-xs text-slate-500 mt-1">Please enter your email to continue</p>
+              <p className="text-xs text-slate-500 mt-1">Enter your email to continue (optional)</p>
             </div>
             
             <div className="space-y-3 text-left">
@@ -145,7 +145,7 @@ export default function LandingPage({ onEnter }: LandingPageProps) {
             
             <div className="pt-4 mt-4 border-t border-red-200/50 flex flex-col sm:flex-row items-center gap-4 justify-between">
               <div className="text-xs text-red-800">
-                Acknowledging as: <strong>{email}</strong>
+                Acknowledging as: <strong>{email || 'Guest'}</strong>
               </div>
               
               <button 
