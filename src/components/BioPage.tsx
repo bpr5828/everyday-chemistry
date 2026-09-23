@@ -19,25 +19,17 @@ export default function BioPage() {
             {/* Background design */}
             <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-green-400 to-blue-500 opacity-20"></div>
             
-            <div className="relative w-40 h-40 rounded-full border-4 border-white shadow-md overflow-hidden mt-6 mb-4">
-              <img 
-                src="/creator.png" 
-                alt="Creator Profile" 
-                className="w-full h-full object-cover"
-              />
-            </div>
-            
-            <h3 className="text-2xl font-black text-slate-900 font-display">Sarah Jenkins</h3>
+            <h3 className="text-2xl font-black text-slate-900 font-display mt-8">Sanjana Uppalapati</h3>
             <p className="text-sm font-bold text-green-600 tracking-wider uppercase mt-1 mb-4">Class of 2027</p>
             
             <div className="w-full space-y-3 text-sm text-slate-600 mt-4">
               <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-xl">
                 <Mail className="w-4 h-4 text-slate-400" />
-                <span>sarah.citizen.science@gmail.com</span>
+                <span>Sanjana.u0710@gmail.com</span>
               </div>
               <div className="flex items-center gap-3 px-4 py-2 bg-slate-50 rounded-xl">
                 <MapPin className="w-4 h-4 text-slate-400" />
-                <span>Austin, Texas</span>
+                <span>Leesburg, Virginia</span>
               </div>
             </div>
           </div>
