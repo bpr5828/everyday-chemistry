@@ -146,12 +146,12 @@ Set the `DATABASE_URL` environment variable in Vercel to a PostgreSQL connection
 
 ## 📚 College Application Theme
 
-> *"I transformed chemistry from something people memorize into something people can see, question, and contribute to."*
+> *"I wanted to make the chemistry of everyday life accessible, interactive, and transparent for everyone."*
 
 **Resume Bullet Points:**
-- Founded Everyday Chemistry, an interactive public science platform translating 100+ everyday chemicals into citation-backed explanations for students and families
-- Built a React/FastAPI ingredient decoder and citizen chemistry map with anomaly detection to flag outlier pH measurements before publication
-- Produced web-synced chemistry podcast episodes with timestamped visual annotations linking audio segments to compound records
+- Built Everyday Chemistry, a React-based public science platform that educates users on the chemical components of household products and clinical trial processes
+- Developed an interactive citizen chemistry map and ingredient analyzer using TypeScript and Tailwind CSS, featuring an admin dashboard to review and moderate crowdsourced data submissions
+- Integrated responsive, accessible UI components and client-side simulated APIs to create a seamless, educational user experience without relying on complex backend infrastructure
 
 ---
 
