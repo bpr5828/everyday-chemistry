@@ -149,8 +149,10 @@ Set the `DATABASE_URL` environment variable in Vercel to a PostgreSQL connection
 > *"I wanted to make the chemistry of everyday life accessible, interactive, and transparent for everyone."*
 
 **Resume Bullet Points:**
-- Developed an interactive public science platform that decodes the chemistry inside everyday products such as soaps and creams, using React, TypeScript, and Tailwind CSS.
-- Built an interactive citizen chemistry map with an admin dashboard to review and moderate crowdsourced data submissions.
+- Developed a comprehensive citizen science web platform using React, TypeScript, and Tailwind CSS to decode complex chemical ingredients in household products and demystify clinical trial pipelines.
+- Engineered interactive educational tools including an ingredient De-Jargonizer, a visual X-Ray House explorer, and a web-synced Podcast Hub with timestamped annotations linking audio to compound records.
+- Integrated a fully in-browser AI Chatbot using Web-LLM for real-time, privacy-preserving chemistry explanations.
+- Built an interactive Citizen Chemistry Map with a secure admin dashboard to review, flag, and moderate crowdsourced data submissions (e.g., pH measurements).
 
 ---
 
