@@ -18,60 +18,14 @@ export default function LandingPage({ onEnter }: LandingPageProps) {
       return;
     }
     setError('');
-    setLoading(true);
-
-    try {
-      const webhookUrl = import.meta.env.VITE_GOOGLE_SHEET_WEBHOOK_URL;
-      
-      if (webhookUrl) {
-        // Fetch expects a GET by default
-        const urlWithParams = new URL(webhookUrl);
-        urlWithParams.searchParams.append('email', email);
-        
-        const response = await fetch(urlWithParams.toString());
-        const data = await response.json();
-        
-        if (data.exists) {
-          // Bypass disclaimer
-          setSubmitted(true);
-          setTimeout(() => onEnter(email), 500);
-          return;
-        }
-      } else {
-        console.warn('VITE_GOOGLE_SHEET_WEBHOOK_URL is not set. Simulating check.');
-        await new Promise(r => setTimeout(r, 800));
-        // Always show disclaimer locally without webhook
-      }
-      
-      setStep('disclaimer');
-
-    } catch (err) {
-      console.error('Failed to verify email:', err);
-      // On CORS/Network error for GET, fallback to asking for disclaimer to be safe
-      setStep('disclaimer');
-    } finally {
-      setLoading(false);
-    }
+    setStep('disclaimer');
   };
 
   const handleAcknowledge = async () => {
     setLoading(true);
 
     try {
-      const webhookUrl = import.meta.env.VITE_GOOGLE_SHEET_WEBHOOK_URL;
-      
-      if (webhookUrl) {
-        await fetch(webhookUrl, {
-          method: 'POST',
-          redirect: 'follow',
-          headers: {
-            'Content-Type': 'text/plain;charset=utf-8',
-          },
-          body: JSON.stringify({ email, ackStatus: 'Yes', timestamp: new Date().toISOString() }),
-        });
-      } else {
-        await new Promise(r => setTimeout(r, 800));
-      }
+      await new Promise(r => setTimeout(r, 800));
       
       setSubmitted(true);
       setTimeout(() => {
